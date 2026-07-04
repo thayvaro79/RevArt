@@ -1,0 +1,11 @@
+INSERT INTO Tenants (Name, Slug)
+SELECT 'RevArt', 'revart'
+WHERE NOT EXISTS (SELECT 1 FROM Tenants WHERE Slug = 'revart');
+
+INSERT INTO VehicleTypes (Name, Slug)
+SELECT 'Car', 'car'
+WHERE NOT EXISTS (SELECT 1 FROM VehicleTypes WHERE Slug = 'car');
+
+INSERT INTO Manufacturers (Name, Slug)
+SELECT 'BMW', 'bmw'
+WHERE NOT EXISTS (SELECT 1 FROM Manufacturers WHERE Slug = 'bmw');

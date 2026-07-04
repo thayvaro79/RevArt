@@ -1,0 +1,175 @@
+/* ==========================================
+   VEHICLE PHOTO VIEWER
+========================================== */
+
+.photo-viewer-page {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  background: #050505;
+  color: #fff;
+  overflow: hidden;
+}
+
+.photo-viewer-loading {
+  min-height: 100vh;
+  background: #050505;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-viewer-image-wrap {
+  width: 100%;
+  height: 100vh;
+  padding: 32px 7vw;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.photo-viewer-image {
+  max-width: 100%;
+  max-height: 100%;
+
+  object-fit: contain;
+  display: block;
+
+  animation: photoFadeIn 0.35s ease;
+}
+
+@keyframes photoFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.photo-viewer-close {
+  position: fixed;
+  top: 28px;
+  right: 32px;
+  z-index: 30;
+
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+
+  background: rgba(0, 0, 0, 0.42);
+  backdrop-filter: blur(12px);
+
+  color: #fff;
+  font-size: 1.1rem;
+  cursor: pointer;
+
+  transition: 0.25s ease;
+}
+
+.photo-viewer-arrow {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 25;
+
+  width: 56px;
+  height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+
+  background: rgba(0, 0, 0, 0.36);
+  backdrop-filter: blur(12px);
+
+  color: #fff;
+  font-size: 2.4rem;
+  line-height: 1;
+
+  cursor: pointer;
+  transition: 0.25s ease;
+}
+
+.photo-viewer-arrow.left {
+  left: 32px;
+}
+
+.photo-viewer-arrow.right {
+  right: 32px;
+}
+
+.photo-viewer-count {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  z-index: 25;
+
+  padding: 8px 16px;
+  border-radius: 999px;
+
+  background: rgba(0, 0, 0, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.photo-viewer-close:hover,
+.photo-viewer-arrow:hover {
+  background: #fff;
+  color: #000;
+}
+
+.photo-viewer-error {
+  color: red;
+  text-align: center;
+}
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+  .photo-viewer-image-wrap {
+    padding: 24px 18px;
+  }
+
+  .photo-viewer-arrow {
+    width: 44px;
+    height: 44px;
+    font-size: 1.9rem;
+  }
+
+  .photo-viewer-arrow.left {
+    left: 14px;
+  }
+
+  .photo-viewer-arrow.right {
+    right: 14px;
+  }
+
+  .photo-viewer-close {
+    top: 18px;
+    right: 16px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .photo-viewer-count {
+    bottom: 18px;
+  }
+}

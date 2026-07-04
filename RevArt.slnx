@@ -1,0 +1,10 @@
+<Solution>
+  <Folder Name="/backend/">
+    <Project Path="backend/RevArt.Api/RevArt.Api.csproj" />
+    <Project Path="backend/RevArt.Core/RevArt.Core.csproj" />
+    <Project Path="backend/RevArt.Infrastructure/RevArt.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RevArt.Tests/RevArt.Tests.csproj" />
+  </Folder>
+</Solution>
