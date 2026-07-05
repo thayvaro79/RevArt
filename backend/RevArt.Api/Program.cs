@@ -63,7 +63,6 @@ var app = builder.Build();
 // Middleware
 // --------------------
 
-// Leave Swagger enabled for now while we are deploying.
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -71,7 +70,10 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowReactDevClient");
 
-// Temporary diagnostic endpoints
+// --------------------
+// Diagnostic Endpoints
+// --------------------
+
 app.MapGet("/", () => "RevArt API is alive");
 
 app.MapGet("/health", () =>
@@ -83,6 +85,12 @@ app.MapGet("/health", () =>
         environment = app.Environment.EnvironmentName
     });
 });
+
+app.MapGet("/routes-test", () => "Routes are working");
+
+// --------------------
+// Controllers
+// --------------------
 
 app.MapControllers();
 
