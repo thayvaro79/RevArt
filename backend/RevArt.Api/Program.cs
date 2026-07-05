@@ -25,7 +25,7 @@ var connectionString = builder.Configuration.GetConnectionString("RevArtDb");
 Console.WriteLine($"REVART DB CONNECTION = {connectionString}");
 
 builder.Services.AddDbContext<RevArtDbContext>(options =>
-    options.UseSqlite(connectionString));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
