@@ -44,7 +44,11 @@ builder.Services.AddSwaggerGen();
 // --------------------
 
 var connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection");
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? Environment.GetEnvironmentVariable("SQLAZURECONNSTR_DefaultConnection")
+    ?? Environment.GetEnvironmentVariable("DefaultConnection");
+
+Console.WriteLine($"REVART DB CONNECTION = {connectionString}");
 
 Console.WriteLine($"REVART DB CONNECTION = {connectionString}");
 
