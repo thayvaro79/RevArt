@@ -71,6 +71,19 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowReactDevClient");
 
+// Temporary diagnostic endpoints
+app.MapGet("/", () => "RevArt API is alive");
+
+app.MapGet("/health", () =>
+{
+    return Results.Ok(new
+    {
+        status = "ok",
+        application = "RevArt API",
+        environment = app.Environment.EnvironmentName
+    });
+});
+
 app.MapControllers();
 
 app.Run();
