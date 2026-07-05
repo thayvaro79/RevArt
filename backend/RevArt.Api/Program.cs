@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using RevArt.Api.Controllers;
 using RevArt.Infrastructure.Data;
 
 using RevArt.Core.Interfaces;
@@ -30,7 +32,10 @@ builder.Services.AddCors(options =>
 // Services
 // --------------------
 
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddApplicationPart(typeof(VehiclesController).Assembly);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -93,5 +98,13 @@ app.MapGet("/routes-test", () => "Routes are working");
 // --------------------
 
 app.MapControllers();
+
+// Print discovered endpoints to Azure logs
+var endpointDataSource = app.Services.GetRequiredService<EndpointDataSource>();
+
+foreach (var endpoint in endpointDataSource.Endpoints)
+{
+    Console.WriteLine($"REGISTERED ENDPOINT: {endpoint.DisplayName}");
+}
 
 app.Run();
