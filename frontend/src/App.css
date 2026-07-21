@@ -1054,3 +1054,25 @@ body {
     min-height: 460px;
   }
 }
+
+.vehicle-card-no-image {
+  background: linear-gradient(
+    135deg,
+    #111111,
+    #222222
+  );
+  position: relative;
+}
+
+.vehicle-card-no-image::after {
+  content: "Image Coming Soon";
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255,255,255,0.45);
+  font-size: 1rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}

@@ -40,23 +40,26 @@ export default function Garage() {
     loadVehicles();
   }, []);
 
-  const availableCars = vehicles.filter(
-    (vehicle) =>
-      normalize(getVehicleType(vehicle)) === "car" &&
-      normalize(vehicle.status) === "available"
-  );
+  const availableCars = vehicles.filter((vehicle) => {
+    const status = normalize(vehicle.status);
+    const type = normalize(getVehicleType(vehicle));
 
-  const comingSoonCars = vehicles.filter(
-    (vehicle) =>
-      normalize(getVehicleType(vehicle)) === "car" &&
-      normalize(vehicle.status) === "comingsoon"
-  );
+    return status === "available" && type !== "motorcycle";
+  });
 
-  const motorcycles = vehicles.filter(
-    (vehicle) =>
-      normalize(getVehicleType(vehicle)) === "motorcycle" &&
-      normalize(vehicle.status) === "available"
-  );
+  const comingSoonCars = vehicles.filter((vehicle) => {
+    const status = normalize(vehicle.status);
+    const type = normalize(getVehicleType(vehicle));
+
+    return status === "comingsoon" && type !== "motorcycle";
+  });
+
+  const motorcycles = vehicles.filter((vehicle) => {
+    const status = normalize(vehicle.status);
+    const type = normalize(getVehicleType(vehicle));
+
+    return type === "motorcycle" && status === "available";
+  });
 
   return (
     <>
@@ -68,20 +71,9 @@ export default function Garage() {
           <p className="inventory-loading">Loading inventory...</p>
         ) : (
           <>
-            <InventorySection
-              eyebrow="AVAILABLE NOW"
-              vehicles={availableCars}
-            />
-
-            <InventorySection
-              eyebrow="COMING SOON"
-              vehicles={comingSoonCars}
-            />
-
-            <InventorySection
-              eyebrow="MOTORCYCLES"
-              vehicles={motorcycles}
-            />
+            <InventorySection eyebrow="AVAILABLE NOW" vehicles={availableCars} />
+            <InventorySection eyebrow="COMING SOON" vehicles={comingSoonCars} />
+            <InventorySection eyebrow="MOTORCYCLES" vehicles={motorcycles} />
           </>
         )}
 
@@ -96,7 +88,7 @@ function InventorySection({ eyebrow, title, description, vehicles }) {
   const [page, setPage] = useState(1);
   const gridRef = useRef(null);
 
-  const pageSize = 4;
+  const pageSize = 6;
   const totalPages = Math.ceil((vehicles?.length || 0) / pageSize);
 
   const pagedVehicles = vehicles.slice(
@@ -125,9 +117,7 @@ function InventorySection({ eyebrow, title, description, vehicles }) {
     <section className="inventory-section">
       <div className="section-heading">
         <p className="eyebrow">{eyebrow}</p>
-
         {title && <h2>{title}</h2>}
-
         {description && <p className="section-description">{description}</p>}
       </div>
 

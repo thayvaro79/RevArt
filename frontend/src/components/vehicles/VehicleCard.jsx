@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 export default function VehicleCard({ vehicle }) {
-  const imageUrl = vehicle.imageUrl || "/images/cars/f1.webp";
+  const imageUrl = vehicle.imageUrl || "/images/placeholders/vehicle-placeholder.webp";
 
   const normalizedStatus = String(vehicle.status || "")
     .toLowerCase()
@@ -10,10 +10,12 @@ export default function VehicleCard({ vehicle }) {
   const isComingSoon = normalizedStatus === "comingsoon";
 
   return (
-    <article
-      className={`vehicle-card ${isComingSoon ? "vehicle-card-disabled" : ""}`}
-      style={{ backgroundImage: `url(${imageUrl})` }}
-    >
+      <article
+      className={`vehicle-card ${isComingSoon ? "vehicle-card-disabled" : ""} ${
+      !vehicle.imageUrl ? "vehicle-card-no-image" : ""
+      }`}
+  style={vehicle.imageUrl ? { backgroundImage: `url(${vehicle.imageUrl})` } : undefined}
+>
       <div className="vehicle-card-overlay">
         <div className="vehicle-card-copy">
           {vehicle.isFeatured && <p className="vehicle-label">Featured</p>}
