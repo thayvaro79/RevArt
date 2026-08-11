@@ -1,0 +1,84 @@
+/* SOLD MISSION + ACCORDION */
+
+.sold-mission-section {
+  padding: 90px 7vw;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 80px;
+  background: #050505;
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.sold-mission-copy h2 {
+  margin: 0 0 32px;
+  max-width: 620px;
+  color: #fff;
+  font-size: clamp(42px, 4.8vw, 72px);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.sold-mission-copy p {
+  max-width: 620px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 20px;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+.sold-accordion {
+  display: grid;
+  gap: 0;
+}
+
+.sold-accordion-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.sold-accordion-item:last-child {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.sold-accordion-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 26px 0;
+  background: transparent;
+  border: 0;
+  color: #fff;
+  font-size: clamp(20px, 2vw, 28px);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sold-accordion-icon {
+  flex-shrink: 0;
+  color: #d6b36a;
+  font-size: 22px;
+  transition: transform 0.25s;
+}
+
+.sold-accordion-item.open .sold-accordion-icon {
+  transform: rotate(180deg);
+}
+
+.sold-accordion-body {
+  max-width: 640px;
+  margin: 0 0 26px;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 17px;
+  line-height: 1.65;
+  white-space: pre-line;
+}
+
+@media (max-width: 900px) {
+  .sold-mission-section {
+    grid-template-columns: 1fr;
+    padding: 72px 24px;
+    gap: 48px;
+  }
+}

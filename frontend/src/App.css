@@ -575,7 +575,8 @@ body {
   }
 
   .garage-hero {
-    min-height: 680px;
+    height: 100svh;
+    min-height: 560px;
   }
 
   .garage-hero-content {
@@ -621,6 +622,21 @@ body {
   border-top: 1px solid rgba(255,255,255,.65);
 }
 
+  .footer-main {
+    grid-template-columns: 1fr;
+    gap: 40px;
+    padding: 60px 24px;
+    min-height: auto;
+  }
+
+  .footer-bottom {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    padding: 28px 24px;
+    font-size: 16px;
+    text-align: left;
+  }
+
 
 @media (max-width: 700px) {
   .vehicle-grid {
@@ -629,6 +645,21 @@ body {
 
   .vehicle-card {
     min-height: 420px;
+  }
+}
+
+@media (max-width: 480px) {
+  .garage-hero-content h1 {
+    font-size: clamp(2.2rem, 11vw, 3rem);
+  }
+
+  .footer-brand h2 {
+    font-size: 34px;
+    letter-spacing: 6px;
+  }
+
+  .footer-bottom {
+    font-size: 14px;
   }
 }
 

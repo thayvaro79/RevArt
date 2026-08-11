@@ -1,28 +1,32 @@
 import { useEffect, useState } from "react";
 import { getPageHero } from "../../api/pageHeroesApi";
 
-export default function GarageHero() {
+export default function PageHero({
+  pageKey,
+  title,
+  fallbackImage = "/images/garage_header.png",
+}) {
   const [hero, setHero] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadHero() {
       try {
-        const data = await getPageHero("garage", 1);
+        const data = await getPageHero(pageKey, 1);
         setHero(data);
       } catch (error) {
-        console.error("Failed to load garage hero:", error);
+        console.error(`Failed to load ${pageKey} hero:`, error);
       } finally {
         setLoading(false);
       }
     }
 
     loadHero();
-  }, []);
+  }, [pageKey]);
 
   if (loading) return null;
 
-  const heroImage = hero?.imageUrl || "/images/garage_header.png";
+  const heroImage = hero?.imageUrl || fallbackImage;
 
   return (
     <section
@@ -40,7 +44,7 @@ export default function GarageHero() {
       }}
     >
       <div className="garage-hero-content">
-        <h1>THE GARAGE</h1>
+        <h1>{title}</h1>
       </div>
 
       <button

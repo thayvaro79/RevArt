@@ -7,7 +7,7 @@ export default function Header() {
         <nav className="site-nav">
           {/* <a href="/">Home</a> */}
           <a href="/garage">The Garage</a>
-          <a href="/about">Sold</a>
+          <a href="/sold">Sold</a>
           <a href="/whoweare">Who We Are</a>
           <a href="/whatwedo">What We Do</a>
           <a href="/contact">Contact Us</a>

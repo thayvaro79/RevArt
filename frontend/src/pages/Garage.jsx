@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { getVehicles } from "../api/vehiclesApi";
 import VehicleCard from "../components/vehicles/VehicleCard";
 import Header from "../components/layout/Header";
-import GarageHero from "../components/layout/GarageHero";
+import PageHero from "../components/layout/PageHero";
 import InquirySection from "../components/layout/InquirySection";
 import Footer from "../components/layout/Footer";
 
@@ -64,7 +64,7 @@ export default function Garage() {
   return (
     <>
       <Header />
-      <GarageHero />
+      <PageHero pageKey="garage" title="THE GARAGE" />
 
       <main className="garage-page" id="inventory">
         {loading ? (
