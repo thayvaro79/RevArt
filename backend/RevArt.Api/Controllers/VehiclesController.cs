@@ -29,28 +29,41 @@ public class VehiclesController : ControllerBase
             .Include(v => v.VehicleType)
             .Where(v => v.TenantId == tenantId)
             .OrderByDescending(v => v.CreatedAt)
-            .Select(v => new VehicleResponse
-            {
-                Id = v.Id,
-                Title = v.Title,
-                Slug = v.Slug,
-                Year = v.Year,
-                ManufacturerName = v.Manufacturer.Name,
-                VehicleTypeName = v.VehicleType.Name,
-                Model = v.Model,
-                Trim = v.Trim,
-                Mileage = v.Mileage,
-                Price = v.Price,
-                Status = v.Status.ToString(),
-                IsFeatured = v.IsFeatured,
-                ExteriorColor = v.ExteriorColor,
-                InteriorColor = v.InteriorColor,
-                Description = v.Description,
-                ImageUrl = v.ImageUrl
-            })
             .ToListAsync();
 
-        return Ok(vehicles);
+        var vehicleIds = vehicles.Select(v => v.Id).ToList();
+
+        var photos = await _db.VehiclePhotos
+            .AsNoTracking()
+            .Where(p => vehicleIds.Contains(p.VehicleId) && p.IsActive)
+            .ToListAsync();
+
+        var response = vehicles.Select(v => new VehicleResponse
+        {
+            Id = v.Id,
+            Title = v.Title,
+            Slug = v.Slug,
+            Year = v.Year,
+            ManufacturerName = v.Manufacturer.Name,
+            VehicleTypeName = v.VehicleType.Name,
+            Model = v.Model,
+            Trim = v.Trim,
+            Mileage = v.Mileage,
+            Price = v.Price,
+            Status = v.Status.ToString(),
+            IsFeatured = v.IsFeatured,
+            ExteriorColor = v.ExteriorColor,
+            InteriorColor = v.InteriorColor,
+            Description = v.Description,
+            ImageUrl = photos
+                .Where(p => p.VehicleId == v.Id)
+                .OrderByDescending(p => p.IsCover)
+                .ThenBy(p => p.SortOrder)
+                .Select(p => p.ImageUrl)
+                .FirstOrDefault()
+        }).ToList();
+
+        return Ok(response);
     }
 
     [HttpGet("{slug}")]
