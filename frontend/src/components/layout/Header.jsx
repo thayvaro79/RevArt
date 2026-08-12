@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 const NAV_LINKS = [
   { href: "/garage", label: "The Garage" },
@@ -14,7 +15,9 @@ export default function Header() {
   return (
     <header className="site-header">
       <div className="site-header-inner">
-        <div className="site-logo">REVART</div>
+        <Link to="/" className="site-logo">
+          REVART
+        </Link>
 
         <nav className="site-nav">
           {NAV_LINKS.map((link) => (

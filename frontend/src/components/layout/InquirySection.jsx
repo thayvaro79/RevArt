@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { createInquiry } from "../../api/inquiriesApi";
 
-export default function InquirySection() {
+export default function InquirySection({
+  heading = "Looking for something else?",
+  description = "Tell us what you are looking for. We will notify you when a matching vehicle becomes available.",
+  sourcePage = "Garage",
+}) {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -47,7 +51,7 @@ export default function InquirySection() {
         phone: form.phone,
         message: form.message,
         subscribeToNewsletter: form.subscribeToNewsletter,
-        sourcePage: "Garage",
+        sourcePage,
       });
 
       setSuccessMessage("Thank you. Someone from RevArt will be in touch soon.");
@@ -71,12 +75,9 @@ export default function InquirySection() {
   return (
     <section className="inquiry-section">
       <div className="inquiry-copy">
-        <h2>Looking for something else?</h2>
+        <h2>{heading}</h2>
 
-        <p>
-          Tell us what you are looking for. We will notify you when a matching
-          vehicle becomes available.
-        </p>
+        <p>{description}</p>
       </div>
 
       <form className="inquiry-form" onSubmit={handleSubmit}>
