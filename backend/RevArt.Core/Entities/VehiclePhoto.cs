@@ -5,22 +5,31 @@ public class VehiclePhoto
     public int Id { get; set; }
 
     public int VehicleId { get; set; }
-    public Vehicle Vehicle { get; set; } = null!;
 
     public string ImageUrl { get; set; } = string.Empty;
 
     public string? AltText { get; set; }
 
-    public string Category { get; set; } = "Exterior";
-    // Exterior, Interior, Engine, Trunk, Document, Other
-
-    public string Role { get; set; } = "Gallery";
-    // Hero, Overview, Gallery, Feature, Cover
+    public int SortOrder { get; set; }
 
     public bool IsCover { get; set; }
 
+    public string Role { get; set; } = string.Empty;
+
+    public string Category { get; set; } = string.Empty;
+
     public bool IsActive { get; set; } = true;
 
-    public int SortOrder { get; set; }
-}
+    // Blob metadata
+    public string? BlobName { get; set; }
 
+    public string? OriginalFileName { get; set; }
+
+    public string? ContentType { get; set; }
+
+    public long FileSize { get; set; }
+
+    public DateTime? CreatedUtc { get; set; }
+
+    public Vehicle? Vehicle { get; set; }
+}

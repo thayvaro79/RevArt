@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using RevArt.Api.Controllers;
 using RevArt.Infrastructure.Data;
+using RevArt.Infrastructure.Services;
 
 using RevArt.Core.Interfaces;
 using RevArt.Core.Services;
@@ -61,7 +62,7 @@ builder.Services.AddDbContext<RevArtDbContext>(options =>
 
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
-
+builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 // --------------------
 // Build
 // --------------------

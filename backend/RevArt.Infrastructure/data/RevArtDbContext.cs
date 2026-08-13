@@ -30,7 +30,11 @@ public class RevArtDbContext : DbContext
 
     public DbSet<TeamMember> TeamMembers => Set<TeamMember>();
 
+    public DbSet<TeamMemberPhoto> TeamMemberPhotos => Set<TeamMemberPhoto>();
+
     public DbSet<Location> Locations => Set<Location>();
+
+    public DbSet<LocationPhoto> LocationPhotos => Set<LocationPhoto>();
 
     public DbSet<Manufacturer> Manufacturers => Set<Manufacturer>();
 

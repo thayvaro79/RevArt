@@ -10,6 +10,8 @@ public class Location
 
     public string Name { get; set; } = string.Empty;
 
+    public string Slug { get; set; } = string.Empty;
+
 
     public string? AddressLine1 { get; set; }
 
@@ -34,4 +36,6 @@ public class Location
 
 
     public bool IsActive { get; set; } = true;
+
+    public ICollection<LocationPhoto> Photos { get; set; } = new List<LocationPhoto>();
 }

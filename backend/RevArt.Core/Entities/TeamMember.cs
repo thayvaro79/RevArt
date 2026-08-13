@@ -10,6 +10,8 @@ public class TeamMember
 
     public string Name { get; set; } = string.Empty;
 
+    public string Slug { get; set; } = string.Empty;
+
 
     public string? Title { get; set; }
 
@@ -27,4 +29,6 @@ public class TeamMember
 
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public ICollection<TeamMemberPhoto> Photos { get; set; } = new List<TeamMemberPhoto>();
 }
