@@ -8,6 +8,7 @@ import VehiclePhotoViewer from "./pages/VehiclePhotoViewer";
 import WhoWeAre from "./pages/WhoWeAre";
 import TeamMemberDetail from "./pages/TeamMemberDetail";
 import LocationDetail from "./pages/LocationDetail";
+import WhatWeDo from "./pages/WhatWeDo";
 import "./App.css";
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
 <Route path="/whoweare" element={<WhoWeAre />} />
 <Route path="/team/:slug" element={<TeamMemberDetail />} />
 <Route path="/locations/:slug" element={<LocationDetail />} />
+<Route path="/whatwedo" element={<WhatWeDo />} />
 
       </Routes>
     </BrowserRouter>
