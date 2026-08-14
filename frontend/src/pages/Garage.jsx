@@ -64,7 +64,11 @@ export default function Garage() {
   return (
     <>
       <Header />
-      <PageHero pageKey="garage" title="THE GARAGE" />
+      <PageHero
+        pageKey="garage"
+        title="THE GARAGE"
+        fallbackImage="/images/garage_hero.jpg"
+      />
 
       <main className="garage-page" id="inventory">
         {loading ? (

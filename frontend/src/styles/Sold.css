@@ -19,10 +19,10 @@
 }
 
 .sold-mission-copy p {
-  max-width: 620px;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 20px;
-  line-height: 1.65;
+  max-width: 480px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 15px;
+  line-height: 1.7;
   white-space: pre-line;
 }
 
@@ -45,12 +45,12 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 26px 0;
+  padding: 18px 0;
   background: transparent;
   border: 0;
   color: #fff;
-  font-size: clamp(20px, 2vw, 28px);
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
 }
@@ -58,7 +58,7 @@
 .sold-accordion-icon {
   flex-shrink: 0;
   color: #d6b36a;
-  font-size: 22px;
+  font-size: 16px;
   transition: transform 0.25s;
 }
 
@@ -67,10 +67,10 @@
 }
 
 .sold-accordion-body {
-  max-width: 640px;
-  margin: 0 0 26px;
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 17px;
+  max-width: 480px;
+  margin: 0 0 18px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
   line-height: 1.65;
   white-space: pre-line;
 }

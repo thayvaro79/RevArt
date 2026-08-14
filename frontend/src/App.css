@@ -2,6 +2,11 @@
   box-sizing: border-box;
 }
 
+:root {
+  --font-display: "Archivo", Arial, Helvetica, sans-serif;
+  --font-body: "Inter", Arial, Helvetica, sans-serif;
+}
+
 html,
 body,
 #root {
@@ -14,8 +19,38 @@ body,
 
 body {
   color: #fff;
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
   overflow-x: hidden;
+}
+
+/* DISPLAY TYPOGRAPHY — headings, nav, labels, buttons, eyebrows */
+
+h1,
+h2,
+h3,
+.site-logo,
+.site-nav a,
+.mobile-nav a,
+.vehicle-section-nav a,
+button,
+.home-cta-button,
+.eyebrow,
+.vehicle-label,
+.vehicle-photos-title,
+.vehicle-document-button,
+.stat-value,
+.stat-label,
+.promo-card-title,
+.person-card-name,
+.person-card-title,
+.person-detail-role {
+  font-family: var(--font-display);
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 800;
 }
 
 /* HEADER */
@@ -205,8 +240,9 @@ body {
 }
 
 .section-heading {
-  padding: 28px 48px 24px;
+  padding: 28px 7vw 24px;
   border-top: 1px solid rgba(255, 255, 255, 0.35);
+  text-align: center;
 }
 
 .eyebrow {
@@ -236,6 +272,10 @@ body {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0;
+}
+
+.vehicle-grid > *:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
 }
 
 /* VEHICLE CARD */
@@ -385,29 +425,29 @@ body {
 }
 
 .inquiry-copy p {
-  max-width: 620px;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 20px;
-  line-height: 1.65;
+  max-width: 480px;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 15px;
+  line-height: 1.7;
   white-space: pre-line;
 }
 
 .inquiry-form {
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .form-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: 14px;
 }
 
 .inquiry-form label {
   display: grid;
-  gap: 8px;
+  gap: 6px;
   color: #fff;
-  font-size: 18px;
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -417,17 +457,18 @@ body {
   background: transparent;
   color: white;
   border: 1px solid rgba(255, 255, 255, 0.75);
-  border-radius: 8px;
-  padding: 12px 14px;
+  border-radius: 6px;
+  padding: 8px 12px;
   font-size: 15px;
 }
 
 .inquiry-form input {
-  height: 46px;
+  height: 38px;
 }
 
 .inquiry-form textarea {
-  min-height: 130px;
+  height: 100px;
+  min-height: 80px;
   resize: vertical;
 }
 
@@ -443,12 +484,14 @@ body {
 }
 
 .inquiry-form button {
-  width: 190px;
-  height: 50px;
+  width: auto;
+  justify-self: start;
+  height: 44px;
+  padding: 0 32px;
   background: #d6b36a;
   color: #050505;
   border: 1px solid #d6b36a;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 1px;
@@ -654,7 +697,7 @@ body {
   }
 
   .form-row {
-    grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .footer-top {

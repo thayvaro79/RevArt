@@ -25,10 +25,11 @@
 }
 
 .brand-story-section p {
+  max-width: 480px;
   margin: 0;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 18px;
-  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 15px;
+  line-height: 1.7;
   white-space: pre-line;
 }
 
