@@ -1,10 +1,18 @@
-import { useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { getVehicles } from "../api/vehiclesApi";
 import VehicleCard from "../components/vehicles/VehicleCard";
+import GarageControls from "../components/garage/GarageControls";
 import Header from "../components/layout/Header";
 import PageHero from "../components/layout/PageHero";
 import InquirySection from "../components/layout/InquirySection";
 import Footer from "../components/layout/Footer";
+import "../styles/Garage.css";
 
 function normalize(value) {
   return String(value || "")
@@ -25,6 +33,11 @@ export default function Garage() {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const availableRef = useRef(null);
+  const comingSoonRef = useRef(null);
+  const motorcyclesRef = useRef(null);
+  const featuredCardRef = useRef(null);
+
   useEffect(() => {
     async function loadVehicles() {
       try {
@@ -40,7 +53,7 @@ export default function Garage() {
     loadVehicles();
   }, []);
 
-  const availableCars = vehicles.filter((vehicle) => {
+  const availableCarsAll = vehicles.filter((vehicle) => {
     const status = normalize(vehicle.status);
     const type = normalize(getVehicleType(vehicle));
 
@@ -61,6 +74,43 @@ export default function Garage() {
     return type === "motorcycle" && status === "available";
   });
 
+  const featuredVehicle =
+    availableCarsAll.find((vehicle) => vehicle.isFeatured) ||
+    comingSoonCars.find((vehicle) => vehicle.isFeatured) ||
+    motorcycles.find((vehicle) => vehicle.isFeatured) ||
+    null;
+
+  const availableCars = featuredVehicle
+    ? availableCarsAll.filter((vehicle) => vehicle.id !== featuredVehicle.id)
+    : availableCarsAll;
+
+  function handleSelectVehicle(vehicle) {
+    if (featuredVehicle && vehicle.id === featuredVehicle.id) {
+      const el = featuredCardRef.current;
+
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("vehicle-card-highlight");
+        setTimeout(() => el.classList.remove("vehicle-card-highlight"), 1600);
+      }
+
+      return;
+    }
+
+    const status = normalize(vehicle.status);
+    const type = normalize(getVehicleType(vehicle));
+
+    let targetRef = availableRef;
+
+    if (type === "motorcycle" && status === "available") {
+      targetRef = motorcyclesRef;
+    } else if (status === "comingsoon") {
+      targetRef = comingSoonRef;
+    }
+
+    targetRef.current?.focusVehicle(vehicle.id);
+  }
+
   return (
     <>
       <Header />
@@ -75,9 +125,37 @@ export default function Garage() {
           <p className="inventory-loading">Loading inventory...</p>
         ) : (
           <>
-            <InventorySection eyebrow="AVAILABLE NOW" vehicles={availableCars} />
-            <InventorySection eyebrow="COMING SOON" vehicles={comingSoonCars} />
-            <InventorySection eyebrow="MOTORCYCLES" vehicles={motorcycles} />
+            <GarageControls
+              vehicles={[...availableCarsAll, ...comingSoonCars, ...motorcycles]}
+              availableCount={availableCarsAll.length}
+              comingSoonCount={comingSoonCars.length}
+              motorcycleCount={motorcycles.length}
+              onSelectVehicle={handleSelectVehicle}
+            />
+
+            {featuredVehicle && (
+              <section className="featured-vehicle-section">
+                <div className="vehicle-grid vehicle-grid--garage vehicle-grid--featured">
+                  <VehicleCard vehicle={featuredVehicle} ref={featuredCardRef} />
+                </div>
+              </section>
+            )}
+
+            <InventorySection
+              ref={availableRef}
+              eyebrow="AVAILABLE NOW"
+              vehicles={availableCars}
+            />
+            <InventorySection
+              ref={comingSoonRef}
+              eyebrow="COMING SOON"
+              vehicles={comingSoonCars}
+            />
+            <InventorySection
+              ref={motorcyclesRef}
+              eyebrow="MOTORCYCLES"
+              vehicles={motorcycles}
+            />
           </>
         )}
 
@@ -88,9 +166,14 @@ export default function Garage() {
   );
 }
 
-function InventorySection({ eyebrow, title, description, vehicles }) {
+const InventorySection = forwardRef(function InventorySection(
+  { eyebrow, title, description, vehicles },
+  ref
+) {
   const [page, setPage] = useState(1);
+  const [pendingFocusId, setPendingFocusId] = useState(null);
   const gridRef = useRef(null);
+  const cardRefs = useRef({});
 
   const pageSize = 6;
   const totalPages = Math.ceil((vehicles?.length || 0) / pageSize);
@@ -99,6 +182,40 @@ function InventorySection({ eyebrow, title, description, vehicles }) {
     (page - 1) * pageSize,
     page * pageSize
   );
+
+  useImperativeHandle(ref, () => ({
+    focusVehicle(vehicleId) {
+      const index = vehicles.findIndex((vehicle) => vehicle.id === vehicleId);
+
+      if (index === -1) return false;
+
+      const targetPage = Math.floor(index / pageSize) + 1;
+
+      setPage(targetPage);
+      setPendingFocusId(vehicleId);
+
+      return true;
+    },
+  }));
+
+  useEffect(() => {
+    if (pendingFocusId == null) return;
+
+    const el = cardRefs.current[pendingFocusId];
+
+    if (!el) return;
+
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("vehicle-card-highlight");
+
+    const timeout = setTimeout(() => {
+      el.classList.remove("vehicle-card-highlight");
+    }, 1600);
+
+    setPendingFocusId(null);
+
+    return () => clearTimeout(timeout);
+  }, [page, pendingFocusId]);
 
   function goToPage(nextPage) {
     if (nextPage < 1 || nextPage > totalPages) return;
@@ -125,9 +242,15 @@ function InventorySection({ eyebrow, title, description, vehicles }) {
         {description && <p className="section-description">{description}</p>}
       </div>
 
-      <div ref={gridRef} className="vehicle-grid">
+      <div ref={gridRef} className="vehicle-grid vehicle-grid--garage">
         {pagedVehicles.map((vehicle) => (
-          <VehicleCard key={vehicle.id} vehicle={vehicle} />
+          <VehicleCard
+            key={vehicle.id}
+            vehicle={vehicle}
+            ref={(el) => {
+              cardRefs.current[vehicle.id] = el;
+            }}
+          />
         ))}
       </div>
 
@@ -161,4 +284,4 @@ function InventorySection({ eyebrow, title, description, vehicles }) {
       )}
     </section>
   );
-}
+});

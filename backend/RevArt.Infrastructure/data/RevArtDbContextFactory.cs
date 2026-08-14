@@ -9,9 +9,12 @@ public class RevArtDbContextFactory : IDesignTimeDbContextFactory<RevArtDbContex
     {
         var optionsBuilder = new DbContextOptionsBuilder<RevArtDbContext>();
 
-        optionsBuilder.UseSqlite(
-            "Data Source=C:\\dev\\revart\\backend\\RevArt.Api\\Data\\revart.db");
+        //local sql server
+        // optionsBuilder.UseSqlServer(
+        //     "Server=(localdb)\\MSSQLLocalDB;Database=RevArt_Dev;Trusted_Connection=True;TrustServerCertificate=True;");
 
-        return new RevArtDbContext(optionsBuilder.Options);
+    optionsBuilder.UseSqlServer(
+        "Server=tcp:revartsql79central.database.windows.net,1433;Initial Catalog=revart-db;Persist Security Info=False;User ID=revartadmin;Password=Abbott127#;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;");
+            return new RevArtDbContext(optionsBuilder.Options);
     }
 }

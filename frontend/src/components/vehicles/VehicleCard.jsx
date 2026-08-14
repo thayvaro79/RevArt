@@ -1,6 +1,7 @@
+import { forwardRef } from "react";
 import { Link } from "react-router-dom";
 
-export default function VehicleCard({ vehicle }) {
+const VehicleCard = forwardRef(function VehicleCard({ vehicle }, ref) {
   const imageUrl = vehicle.imageUrl || "/images/placeholders/vehicle-placeholder.webp";
 
   const normalizedStatus = String(vehicle.status || "")
@@ -11,6 +12,7 @@ export default function VehicleCard({ vehicle }) {
 
   return (
       <article
+      ref={ref}
       className={`vehicle-card ${isComingSoon ? "vehicle-card-disabled" : ""} ${
       !vehicle.imageUrl ? "vehicle-card-no-image" : ""
       }`}
@@ -36,4 +38,6 @@ export default function VehicleCard({ vehicle }) {
       </div>
     </article>
   );
-}
+});
+
+export default VehicleCard;
