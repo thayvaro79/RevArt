@@ -1,9 +1,10 @@
+using Azure.Messaging.ServiceBus;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using RevArt.Api.Controllers;
+using RevArt.Api.Messaging;
 using RevArt.Infrastructure.Data;
 using RevArt.Infrastructure.Services;
-
 using RevArt.Core.Interfaces;
 using RevArt.Core.Services;
 using RevArt.Infrastructure.Repositories;
@@ -49,12 +50,28 @@ var connectionString =
     ?? Environment.GetEnvironmentVariable("SQLAZURECONNSTR_DefaultConnection")
     ?? Environment.GetEnvironmentVariable("DefaultConnection");
 
-Console.WriteLine($"REVART DB CONNECTION = {connectionString}");
-
-Console.WriteLine($"REVART DB CONNECTION = {connectionString}");
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "Database connection string is missing.");
+}
 
 builder.Services.AddDbContext<RevArtDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+// --------------------
+// Service Bus
+// --------------------
+
+var serviceBusConnectionString =
+    builder.Configuration["ServiceBus:ConnectionString"]
+    ?? throw new InvalidOperationException(
+        "Service Bus connection string is missing.");
+
+builder.Services.AddSingleton(
+    new ServiceBusClient(serviceBusConnectionString));
+
+builder.Services.AddSingleton<ImageUploadedMessageSender>();
 
 // --------------------
 // Dependency Injection
@@ -63,6 +80,7 @@ builder.Services.AddDbContext<RevArtDbContext>(options =>
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+
 // --------------------
 // Build
 // --------------------
@@ -104,12 +122,14 @@ app.MapGet("/routes-test", () => "Routes are working");
 
 app.MapControllers();
 
-// Print discovered endpoints to Azure logs
-var endpointDataSource = app.Services.GetRequiredService<EndpointDataSource>();
+// Print discovered endpoints to logs
+var endpointDataSource =
+    app.Services.GetRequiredService<EndpointDataSource>();
 
 foreach (var endpoint in endpointDataSource.Endpoints)
 {
-    Console.WriteLine($"REGISTERED ENDPOINT: {endpoint.DisplayName}");
+    Console.WriteLine(
+        $"REGISTERED ENDPOINT: {endpoint.DisplayName}");
 }
 
 app.Run();

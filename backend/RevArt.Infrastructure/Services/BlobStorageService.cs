@@ -2,6 +2,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Configuration;
 using RevArt.Core.Interfaces;
+using RevArt.Core.Models;
 
 namespace RevArt.Infrastructure.Services;
 
@@ -16,18 +17,22 @@ public class BlobStorageService : IBlobStorageService
 
         if (string.IsNullOrWhiteSpace(connectionString))
         {
-            throw new InvalidOperationException("Azure Storage connection string is missing.");
+            throw new InvalidOperationException(
+                "Azure Storage connection string is missing.");
         }
 
         if (string.IsNullOrWhiteSpace(containerName))
         {
-            throw new InvalidOperationException("Azure Storage container name is missing.");
+            throw new InvalidOperationException(
+                "Azure Storage container name is missing.");
         }
 
-        _containerClient = new BlobContainerClient(connectionString, containerName);
+        _containerClient = new BlobContainerClient(
+            connectionString,
+            containerName);
     }
 
-    public async Task<string> UploadAsync(
+    public async Task<BlobUploadResult> UploadAsync(
         Stream fileStream,
         string fileName,
         string contentType,
@@ -38,7 +43,8 @@ public class BlobStorageService : IBlobStorageService
         var extension = Path.GetExtension(safeFileName);
         var uniqueFileName = $"{Guid.NewGuid():N}{extension}";
 
-        var blobName = $"{tenantId}/{vehicleId}/original/{uniqueFileName}";
+        var blobName =
+            $"{tenantId}/{vehicleId}/original/{uniqueFileName}";
 
         var blobClient = _containerClient.GetBlobClient(blobName);
 
@@ -50,8 +56,14 @@ public class BlobStorageService : IBlobStorageService
             }
         };
 
-        await blobClient.UploadAsync(fileStream, uploadOptions);
+        await blobClient.UploadAsync(
+            fileStream,
+            uploadOptions);
 
-        return blobClient.Uri.ToString();
+        return new BlobUploadResult
+        {
+            Url = blobClient.Uri.ToString(),
+            BlobName = blobName
+        };
     }
 }

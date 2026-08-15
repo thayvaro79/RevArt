@@ -1,0 +1,1 @@
+dotnet Revart.ImageProcessor.dll
