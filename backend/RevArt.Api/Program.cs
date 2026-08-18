@@ -3,11 +3,11 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using RevArt.Api.Controllers;
 using RevArt.Api.Messaging;
-using RevArt.Infrastructure.Data;
-using RevArt.Infrastructure.Services;
 using RevArt.Core.Interfaces;
 using RevArt.Core.Services;
+using RevArt.Infrastructure.Data;
 using RevArt.Infrastructure.Repositories;
+using RevArt.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -80,6 +80,29 @@ builder.Services.AddSingleton<ImageUploadedMessageSender>();
 builder.Services.AddScoped<IVehicleRepository, VehicleRepository>();
 builder.Services.AddScoped<IVehicleService, VehicleService>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
+builder.Services.AddScoped<IVehicleSearchService, VehicleSearchService>();
+
+builder.Services.AddScoped<IVehicleSearchInterpreter>(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+
+    var endpoint = configuration["AzureOpenAI:Endpoint"]
+        ?? throw new InvalidOperationException(
+            "Azure OpenAI endpoint is missing.");
+
+    var apiKey = configuration["AzureOpenAI:ApiKey"]
+        ?? throw new InvalidOperationException(
+            "Azure OpenAI API key is missing.");
+
+    var deploymentName = configuration["AzureOpenAI:DeploymentName"]
+        ?? throw new InvalidOperationException(
+            "Azure OpenAI deployment name is missing.");
+
+    return new AzureVehicleSearchInterpreter(
+        endpoint,
+        apiKey,
+        deploymentName);
+});
 
 // --------------------
 // Build

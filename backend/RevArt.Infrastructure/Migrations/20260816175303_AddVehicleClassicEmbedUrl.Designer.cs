@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RevArt.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using RevArt.Infrastructure.Data;
 namespace RevArt.Infrastructure.Migrations
 {
     [DbContext(typeof(RevArtDbContext))]
-    partial class RevArtDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260816175303_AddVehicleClassicEmbedUrl")]
+    partial class AddVehicleClassicEmbedUrl
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

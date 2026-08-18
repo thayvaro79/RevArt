@@ -47,6 +47,7 @@ public class VehicleService : IVehicleService
             HistoryText = vehicle.HistoryText,
             TheCarText = vehicle.TheCarText,
             MarketNotes = vehicle.MarketNotes,
+            ClassicEmbedUrl = vehicle.ClassicEmbedUrl,
             ConditionReportText = vehicle.ConditionReportText,
 
             Photos = vehicle.Photos

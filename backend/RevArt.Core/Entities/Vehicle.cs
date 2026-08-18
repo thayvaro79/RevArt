@@ -53,6 +53,8 @@ public class Vehicle
     public string? TheCarText { get; set; }
 
     public string? MarketNotes { get; set; }
-    
+
+    public string? ClassicEmbedUrl { get; set; }
+
     public string? ConditionReportText { get; set; }
 }

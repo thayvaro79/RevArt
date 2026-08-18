@@ -37,6 +37,8 @@ public class VehicleDetailResponseDto
 
     public string? MarketNotes { get; set; }
 
+    public string? ClassicEmbedUrl { get; set; }
+
     public string? ConditionReportText { get; set; }
 
     public List<VehiclePhotoResponseDto> Photos { get; set; } = new();

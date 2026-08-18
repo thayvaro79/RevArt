@@ -179,6 +179,29 @@ public class VehiclesController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPut("{id:int}/status")]
+    public async Task<IActionResult> UpdateStatus(int id, UpdateVehicleStatusRequest request)
+    {
+        var vehicle = await _db.Vehicles.FindAsync(id);
+
+        if (vehicle is null)
+        {
+            return NotFound();
+        }
+
+        vehicle.Status = request.Status;
+        vehicle.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        return NoContent();
+    }
+}
+
+public class UpdateVehicleStatusRequest
+{
+    public RevArt.Core.Enums.VehicleStatus Status { get; set; }
 }
 
 public class CreateVehicleRequest

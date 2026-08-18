@@ -4,6 +4,7 @@ import { getVehicleBySlug } from "../api/vehiclesApi";
 import Header from "../components/layout/Header";
 import InquirySection from "../components/layout/InquirySection";
 import Footer from "../components/layout/Footer";
+import ClassicMarketEmbed from "../components/vehicles/ClassicMarketEmbed";
 import "../styles/VehicleDetail.css";
 
 export default function VehicleDetail() {
@@ -399,12 +400,13 @@ export default function VehicleDetail() {
           id="market"
           className="vehicle-text-section"
         >
-          <h2>The Market</h2>
+          <div className="vehicle-text-inner">
+            <h2>The Market</h2>
 
-          <p>
-            {vehicle.marketNotes ||
-              "Market data integration will be added here later. This section is prepared for Classic.com or other collector-car valuation data."}
-          </p>
+            {vehicle.marketNotes && <p>{vehicle.marketNotes}</p>}
+
+            <ClassicMarketEmbed embedUrl={vehicle.classicEmbedUrl} />
+          </div>
         </section>
 
         <section className="vehicle-photo-cards">

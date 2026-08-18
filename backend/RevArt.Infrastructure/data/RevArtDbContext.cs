@@ -39,4 +39,6 @@ public class RevArtDbContext : DbContext
     public DbSet<Manufacturer> Manufacturers => Set<Manufacturer>();
 
     public DbSet<Inquiry> Inquiries => Set<Inquiry>();
+
+    
 }
