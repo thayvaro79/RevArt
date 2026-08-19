@@ -5,6 +5,7 @@ export default function PageHero({
   pageKey,
   title,
   fallbackImage = "/images/garage_header.png",
+  className = "",
 }) {
   const [hero, setHero] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,7 +31,7 @@ export default function PageHero({
 
   return (
     <section
-      className="garage-hero"
+      className={className ? `garage-hero ${className}` : "garage-hero"}
       style={{
         backgroundImage: `
         linear-gradient(

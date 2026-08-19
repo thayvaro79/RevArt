@@ -61,6 +61,7 @@ export default function Home() {
         pageKey="home"
         title="REVART"
         fallbackImage="/images/garage_hero.jpg"
+        className="home-hero"
       />
 
       <main className="home-page">

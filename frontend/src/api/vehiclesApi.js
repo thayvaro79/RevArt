@@ -23,6 +23,18 @@ export async function decodeVin(vin) {
   return response.data;
 }
 
+export async function ocrVinFromImage(imageBlob) {
+  const formData = new FormData();
+  formData.append("file", imageBlob, "vin-capture.jpg");
+
+  const response = await axios.post(
+    `${API_BASE_URL}/Vehicles/ocr-vin`,
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  return response.data;
+}
+
 export async function createVehicle(vehicle) {
   const response = await axios.post(`${API_BASE_URL}/Vehicles`, vehicle);
   return response.data;

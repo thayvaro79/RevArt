@@ -18,12 +18,18 @@ public class VehiclesController : ControllerBase
     private readonly RevArtDbContext _db;
     private readonly IVehicleService _vehicleService;
     private readonly IVinDecoderService _vinDecoderService;
+    private readonly IVinOcrService _vinOcrService;
 
-    public VehiclesController(RevArtDbContext db, IVehicleService vehicleService, IVinDecoderService vinDecoderService)
+    public VehiclesController(
+        RevArtDbContext db,
+        IVehicleService vehicleService,
+        IVinDecoderService vinDecoderService,
+        IVinOcrService vinOcrService)
     {
         _db = db;
         _vehicleService = vehicleService;
         _vinDecoderService = vinDecoderService;
+        _vinOcrService = vinOcrService;
     }
 
     [HttpGet]
@@ -188,6 +194,27 @@ public class VehiclesController : ControllerBase
         }
 
         return Ok(response);
+    }
+
+    [HttpPost("ocr-vin")]
+    [Authorize(Roles = "Admin,Editor")]
+    public async Task<ActionResult<VinOcrResponseDto>> OcrVin(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("No image uploaded.");
+        }
+
+        await using var stream = file.OpenReadStream();
+
+        var result = await _vinOcrService.ExtractVinAsync(stream, file.ContentType);
+
+        return Ok(new VinOcrResponseDto
+        {
+            Success = result.Success,
+            Vin = result.Vin,
+            ErrorMessage = result.ErrorMessage
+        });
     }
 
     private static VehicleType? MatchVehicleType(string bodyClass, List<VehicleType> existingTypes)

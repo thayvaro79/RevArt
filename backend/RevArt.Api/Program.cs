@@ -176,6 +176,28 @@ builder.Services.AddScoped<IVehicleSearchInterpreter>(sp =>
         deploymentName);
 });
 
+builder.Services.AddScoped<IVinOcrService>(sp =>
+{
+    var configuration = sp.GetRequiredService<IConfiguration>();
+
+    var endpoint = configuration["AzureOpenAI:Endpoint"]
+        ?? throw new InvalidOperationException(
+            "Azure OpenAI endpoint is missing.");
+
+    var apiKey = configuration["AzureOpenAI:ApiKey"]
+        ?? throw new InvalidOperationException(
+            "Azure OpenAI API key is missing.");
+
+    var deploymentName = configuration["AzureOpenAI:DeploymentName"]
+        ?? throw new InvalidOperationException(
+            "Azure OpenAI deployment name is missing.");
+
+    return new AzureVinOcrService(
+        endpoint,
+        apiKey,
+        deploymentName);
+});
+
 // --------------------
 // Build
 // --------------------

@@ -537,6 +537,16 @@
   margin-bottom: 16px;
 }
 
+.admin-inline-retry-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #ffb3b3;
+  font-weight: 700;
+  text-decoration: underline;
+  font-size: 13px;
+}
+
 .admin-recent-list {
   list-style: none;
   margin: 0;
@@ -969,6 +979,12 @@
   font-size: 13px;
   text-align: center;
   padding: 20px;
+}
+
+.admin-scan-capture-btn {
+  width: 100%;
+  justify-content: center;
+  margin-top: 14px;
 }
 
 /* ============ CONTENT / SETTINGS ============ */

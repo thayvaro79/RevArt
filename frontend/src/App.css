@@ -678,6 +678,10 @@ h3 {
     white-space: normal;
   }
 
+  .garage-hero.home-hero {
+    background-position: 60% center;
+  }
+
   .section-heading {
     padding: 20px 24px 18px;
   }

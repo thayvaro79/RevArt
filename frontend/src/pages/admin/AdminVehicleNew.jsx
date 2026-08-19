@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import VehicleEntryChoices from "../../components/admin/VehicleEntryChoices";
 import VehiclePhotoUploadStep from "../../components/admin/VehiclePhotoUploadStep";
-import { createVehicle, decodeVin } from "../../api/vehiclesApi";
+import { createVehicle, decodeVin, ocrVinFromImage } from "../../api/vehiclesApi";
 import {
   getManufacturers,
   createManufacturer,
@@ -18,17 +18,43 @@ function slugify(value) {
     .replace(/(^-|-$)/g, "");
 }
 
+function normalizeVinInput(value) {
+  // Strip anything OCR or a stray keystroke might add — VINs are only
+  // digits and uppercase letters (and never contain I, O, or Q).
+  return String(value || "")
+    .toUpperCase()
+    .replace(/[^A-HJ-NPR-Z0-9]/g, "")
+    .slice(0, 17);
+}
+
+function stepForMode(mode) {
+  if (mode === "manual") return "form";
+  if (mode === "enter") return "enter";
+  if (mode === "scan") return "scan";
+  return "choice";
+}
+
 export default function AdminVehicleNew() {
   const location = useLocation();
   const navigate = useNavigate();
-  const initialMode = location.state?.mode;
 
-  const [step, setStep] = useState(() => {
-    if (initialMode === "manual") return "form";
-    if (initialMode === "enter") return "enter";
-    if (initialMode === "scan") return "scan";
-    return "choice";
-  });
+  const [step, setStep] = useState(() => stepForMode(location.state?.mode));
+  // QuickAddSheet navigates here with a fresh { mode } every time, even when
+  // this route is already mounted (e.g. reopening the sheet from within the
+  // Add Vehicle flow itself). location.key changes on every such navigation
+  // even when the pathname doesn't, so tracking it here and resetting `step`
+  // during render — React's supported pattern for "adjust state when a prop
+  // changes" — reliably re-syncs it. A useState lazy initializer alone only
+  // runs on the very first mount and would otherwise leave the flow stuck on
+  // whatever step it already showed.
+  const [syncedLocationKey, setSyncedLocationKey] = useState(location.key);
+  if (location.key !== syncedLocationKey) {
+    setSyncedLocationKey(location.key);
+    if (location.state?.mode) {
+      setStep(stepForMode(location.state.mode));
+    }
+  }
+
   const [vin, setVin] = useState("");
   const [decoding, setDecoding] = useState(false);
   const [decodeError, setDecodeError] = useState(null);
@@ -120,8 +146,12 @@ export default function AdminVehicleNew() {
 function ScanVinStep({ decoding, onCancel, onFallback, onSubmitVin }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
+  const canvasRef = useRef(null);
   const [cameraError, setCameraError] = useState(null);
   const [vinValue, setVinValue] = useState("");
+  const [capturing, setCapturing] = useState(false);
+  const [ocrError, setOcrError] = useState(null);
+  const [ocrConfirming, setOcrConfirming] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -162,6 +192,56 @@ function ScanVinStep({ decoding, onCancel, onFallback, onSubmitVin }) {
     };
   }, []);
 
+  function captureFrameAsBlob() {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+
+    if (!video || !canvas || !video.videoWidth) {
+      return Promise.resolve(null);
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.9);
+    });
+  }
+
+  async function handleCapture() {
+    setOcrError(null);
+    setOcrConfirming(false);
+    setCapturing(true);
+
+    try {
+      const blob = await captureFrameAsBlob();
+
+      if (!blob) {
+        setOcrError("Couldn't capture a frame from the camera. Try again or type the VIN below.");
+        return;
+      }
+
+      const result = await ocrVinFromImage(blob);
+
+      if (result.success && result.vin) {
+        setVinValue(normalizeVinInput(result.vin));
+        setOcrConfirming(true);
+      } else {
+        setOcrError(
+          result.errorMessage || "Couldn't read a VIN from that photo. Try again or type it below."
+        );
+      }
+    } catch (err) {
+      console.error("VIN OCR failed:", err);
+      setOcrError("Couldn't read a VIN from that photo. Try again or type it below.");
+    } finally {
+      setCapturing(false);
+    }
+  }
+
+  const busy = capturing || decoding;
+
   return (
     <div className="admin-form-card admin-scan-step">
       <div className="admin-scan-viewport">
@@ -171,34 +251,56 @@ function ScanVinStep({ decoding, onCancel, onFallback, onSubmitVin }) {
           <video ref={videoRef} autoPlay playsInline muted />
         )}
       </div>
+      <canvas ref={canvasRef} hidden />
 
-      <p className="admin-field-hint">
-        Point the camera at the VIN plate, then type what you see to confirm —
-        automatic VIN recognition isn't wired up yet.
-      </p>
+      {!cameraError && (
+        <button
+          type="button"
+          className="admin-secondary-btn admin-scan-capture-btn"
+          onClick={handleCapture}
+          disabled={busy}
+        >
+          {capturing ? "Reading VIN…" : "Capture VIN Photo"}
+        </button>
+      )}
+
+      {ocrError && <p className="admin-error-banner">{ocrError}</p>}
+
+      {ocrConfirming && !ocrError && (
+        <p className="admin-field-hint">
+          Recognized VIN — review it below, correct anything OCR got wrong, then Continue.
+        </p>
+      )}
+
+      {!ocrConfirming && !cameraError && (
+        <p className="admin-field-hint">
+          Point the camera at the VIN plate and tap Capture VIN Photo, or type the
+          VIN below.
+        </p>
+      )}
 
       <label className="admin-field">
         <span>VIN</span>
         <input
           value={vinValue}
-          onChange={(event) => setVinValue(event.target.value.toUpperCase())}
+          onChange={(event) => setVinValue(normalizeVinInput(event.target.value))}
           placeholder="e.g. 1FAFP404X1F123456"
           maxLength={17}
-          disabled={decoding}
+          disabled={busy}
         />
       </label>
 
       <div className="admin-form-actions">
-        <button type="button" className="admin-secondary-btn" onClick={onCancel} disabled={decoding}>
+        <button type="button" className="admin-secondary-btn" onClick={onCancel} disabled={busy}>
           Back
         </button>
-        <button type="button" className="admin-secondary-btn" onClick={onFallback} disabled={decoding}>
+        <button type="button" className="admin-secondary-btn" onClick={onFallback} disabled={busy}>
           Type VIN instead
         </button>
         <button
           type="button"
           className="admin-primary-btn"
-          disabled={!vinValue.trim() || decoding}
+          disabled={vinValue.length !== 17 || busy}
           onClick={() => onSubmitVin(vinValue.trim())}
         >
           {decoding ? "Decoding…" : "Continue"}
@@ -208,8 +310,17 @@ function ScanVinStep({ decoding, onCancel, onFallback, onSubmitVin }) {
   );
 }
 
-function EnterVinStep({ decoding, onCancel, onSkip, onSubmitVin }) {
-  const [vinValue, setVinValue] = useState("");
+function EnterVinStep({
+  decoding,
+  initialValue = "",
+  hint,
+  cancelLabel = "Back",
+  skipLabel = "Skip",
+  onCancel,
+  onSkip,
+  onSubmitVin,
+}) {
+  const [vinValue, setVinValue] = useState(initialValue);
 
   return (
     <div className="admin-form-card">
@@ -226,15 +337,15 @@ function EnterVinStep({ decoding, onCancel, onSkip, onSubmitVin }) {
       </label>
 
       <p className="admin-field-hint">
-        We'll decode this VIN and pre-fill as much of the listing as we can.
+        {hint || "We'll decode this VIN and pre-fill as much of the listing as we can."}
       </p>
 
       <div className="admin-form-actions">
         <button type="button" className="admin-secondary-btn" onClick={onCancel} disabled={decoding}>
-          Back
+          {cancelLabel}
         </button>
         <button type="button" className="admin-secondary-btn" onClick={onSkip} disabled={decoding}>
-          Skip
+          {skipLabel}
         </button>
         <button
           type="button"
@@ -297,23 +408,42 @@ function ManualForm({ initialVin, decodedVehicle, decodeError, onCancel, onCreat
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [lookupsLoading, setLookupsLoading] = useState(true);
+  const [lookupsError, setLookupsError] = useState(null);
+  const [lookupsRetryToken, setLookupsRetryToken] = useState(0);
 
   useEffect(() => {
+    let active = true;
+    loadLookups();
+
     async function loadLookups() {
+      setLookupsLoading(true);
+      setLookupsError(null);
+
       try {
         const [manufacturerData, typeData] = await Promise.all([
           getManufacturers(),
           getVehicleTypes(),
         ]);
+        if (!active) return;
         setManufacturers(manufacturerData || []);
         setVehicleTypes(typeData || []);
       } catch (err) {
         console.error("Failed to load lookup data:", err);
+        if (active) {
+          setLookupsError(
+            "Couldn't load manufacturers/vehicle types. Check your connection and try again."
+          );
+        }
+      } finally {
+        if (active) setLookupsLoading(false);
       }
     }
 
-    loadLookups();
-  }, []);
+    return () => {
+      active = false;
+    };
+  }, [lookupsRetryToken]);
 
   function updateField(field, value) {
     setForm((current) => {
@@ -420,6 +550,19 @@ function ManualForm({ initialVin, decodedVehicle, decodeError, onCancel, onCreat
         </p>
       ))}
 
+      {lookupsError && (
+        <p className="admin-error-banner">
+          {lookupsError}{" "}
+          <button
+            type="button"
+            className="admin-inline-retry-btn"
+            onClick={() => setLookupsRetryToken((token) => token + 1)}
+          >
+            Retry
+          </button>
+        </p>
+      )}
+
       <div className="admin-form-grid">
         <label className="admin-field admin-field--wide">
           <span>Title</span>
@@ -448,10 +591,11 @@ function ManualForm({ initialVin, decodedVehicle, decodeError, onCancel, onCreat
           <div className="admin-lookup-row">
             <select
               required
+              disabled={lookupsLoading}
               value={manufacturerId}
               onChange={(event) => setManufacturerId(event.target.value)}
             >
-              <option value="">Select…</option>
+              <option value="">{lookupsLoading ? "Loading…" : "Select…"}</option>
               {manufacturers.map((m) => (
                 <option key={m.id} value={m.id}>
                   {m.name}
@@ -475,10 +619,11 @@ function ManualForm({ initialVin, decodedVehicle, decodeError, onCancel, onCreat
           <span>Vehicle Type</span>
           <select
             required
+            disabled={lookupsLoading}
             value={vehicleTypeId}
             onChange={(event) => setVehicleTypeId(event.target.value)}
           >
-            <option value="">Select…</option>
+            <option value="">{lookupsLoading ? "Loading…" : "Select…"}</option>
             {vehicleTypes.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.name}
