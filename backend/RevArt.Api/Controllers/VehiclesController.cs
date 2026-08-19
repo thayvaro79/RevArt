@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RevArt.Core.DTOs;
@@ -11,13 +13,17 @@ namespace RevArt.Api.Controllers;
 [Route("api/[controller]")]
 public class VehiclesController : ControllerBase
 {
+    private static readonly Regex VinPattern = new("^[A-HJ-NPR-Z0-9]{17}$", RegexOptions.Compiled);
+
     private readonly RevArtDbContext _db;
     private readonly IVehicleService _vehicleService;
+    private readonly IVinDecoderService _vinDecoderService;
 
-    public VehiclesController(RevArtDbContext db, IVehicleService vehicleService)
+    public VehiclesController(RevArtDbContext db, IVehicleService vehicleService, IVinDecoderService vinDecoderService)
     {
         _db = db;
         _vehicleService = vehicleService;
+        _vinDecoderService = vinDecoderService;
     }
 
     [HttpGet]
@@ -94,7 +100,145 @@ public class VehiclesController : ControllerBase
         return Ok(vehicle);
     }
 
+    [HttpGet("{id:int}/photos")]
+    public async Task<ActionResult<List<VehiclePhotoResponseDto>>> GetPhotos(int id)
+    {
+        var photos = await _db.VehiclePhotos
+            .AsNoTracking()
+            .Where(p => p.VehicleId == id && p.IsActive)
+            .OrderBy(p => p.SortOrder)
+            .Select(p => new VehiclePhotoResponseDto
+            {
+                Id = p.Id,
+                ImageUrl = p.ImageUrl,
+                AltText = p.AltText,
+                Category = p.Category,
+                Role = p.Role,
+                IsCover = p.IsCover,
+                SortOrder = p.SortOrder
+            })
+            .ToListAsync();
+
+        return Ok(photos);
+    }
+
+    [HttpGet("decode-vin/{vin}")]
+    [Authorize(Roles = "Admin,Editor")]
+    public async Task<ActionResult<DecodeVinResponseDto>> DecodeVin(string vin)
+    {
+        var normalizedVin = (vin ?? string.Empty).Trim().ToUpperInvariant();
+
+        if (!VinPattern.IsMatch(normalizedVin))
+        {
+            return BadRequest("VIN must be 17 characters (letters and digits, excluding I, O, Q).");
+        }
+
+        var decoded = await _vinDecoderService.DecodeAsync(normalizedVin);
+
+        var response = new DecodeVinResponseDto
+        {
+            Vin = normalizedVin,
+            Success = decoded.Success,
+            ErrorMessage = decoded.ErrorMessage,
+            Year = decoded.Year,
+            Model = decoded.Model,
+            Trim = decoded.Trim,
+            Transmission = decoded.Transmission,
+            ManufacturerName = decoded.Make,
+            VehicleTypeName = decoded.BodyClass
+        };
+
+        if (!decoded.Success)
+        {
+            return Ok(response);
+        }
+
+        if (!string.IsNullOrWhiteSpace(decoded.Make))
+        {
+            var manufacturer = await _db.Manufacturers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(m => m.Name.ToLower() == decoded.Make.ToLower());
+
+            if (manufacturer is not null)
+            {
+                response.ManufacturerId = manufacturer.Id;
+                response.ManufacturerName = manufacturer.Name;
+            }
+            else
+            {
+                response.Warnings.Add($"Manufacturer \"{decoded.Make}\" wasn't found — select an existing one or add it.");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(decoded.BodyClass))
+        {
+            var vehicleTypes = await _db.VehicleTypes.AsNoTracking().ToListAsync();
+            var matchedType = MatchVehicleType(decoded.BodyClass, vehicleTypes);
+
+            if (matchedType is not null)
+            {
+                response.VehicleTypeId = matchedType.Id;
+                response.VehicleTypeName = matchedType.Name;
+            }
+            else
+            {
+                response.Warnings.Add($"Vehicle type \"{decoded.BodyClass}\" has no clear match — select it manually.");
+            }
+        }
+
+        return Ok(response);
+    }
+
+    private static VehicleType? MatchVehicleType(string bodyClass, List<VehicleType> existingTypes)
+    {
+        var normalized = bodyClass.Trim().ToLowerInvariant();
+
+        var exact = existingTypes.FirstOrDefault(t => t.Name.ToLower() == normalized);
+        if (exact is not null)
+        {
+            return exact;
+        }
+
+        // vPIC often returns compound, slash-separated labels (e.g. "Sedan/Saloon",
+        // "Convertible/Cabriolet") — match if any segment exactly matches an existing type.
+        var segments = normalized.Split('/', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+        foreach (var segment in segments)
+        {
+            var segmentMatch = existingTypes.FirstOrDefault(t => t.Name.ToLower() == segment);
+            if (segmentMatch is not null)
+            {
+                return segmentMatch;
+            }
+        }
+
+        // Fall back to substring containment (e.g. "Sport Utility Vehicle (SUV)" contains "suv").
+        var containment = existingTypes.FirstOrDefault(t => normalized.Contains(t.Name.ToLower()));
+        if (containment is not null)
+        {
+            return containment;
+        }
+
+        // A few known vPIC wordings that share no substring with RevArt's type names.
+        // Only used if that exact type already exists — never invent new reference data.
+        var synonymMap = new (string Keyword, string Category)[]
+        {
+            ("pickup", "Truck"),
+            ("cabriolet", "Convertible"),
+            ("roadster", "Convertible"),
+        };
+
+        var matchedCategory = synonymMap
+            .Where(s => normalized.Contains(s.Keyword))
+            .Select(s => s.Category)
+            .FirstOrDefault();
+
+        return matchedCategory is null
+            ? null
+            : existingTypes.FirstOrDefault(t => t.Name.ToLower() == matchedCategory.ToLower());
+    }
+
     [HttpPost]
+    [Authorize(Roles = "Admin,Editor")]
     public async Task<ActionResult<Vehicle>> CreateVehicle(CreateVehicleRequest request)
     {
         var vehicle = new Vehicle
@@ -126,6 +270,7 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin,Editor")]
     public async Task<IActionResult> UpdateVehicle(int id, Vehicle vehicle)
     {
         if (id != vehicle.Id)
@@ -165,6 +310,7 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin,Editor")]
     public async Task<IActionResult> DeleteVehicle(int id)
     {
         var vehicle = await _db.Vehicles.FindAsync(id);
@@ -181,6 +327,7 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpPut("{id:int}/status")]
+    [Authorize(Roles = "Admin,Editor")]
     public async Task<IActionResult> UpdateStatus(int id, UpdateVehicleStatusRequest request)
     {
         var vehicle = await _db.Vehicles.FindAsync(id);

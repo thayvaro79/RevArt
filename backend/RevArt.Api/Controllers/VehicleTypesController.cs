@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RevArt.Core.Entities;
@@ -7,6 +8,7 @@ namespace RevArt.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin,Editor")]
 public class VehicleTypesController : ControllerBase
 {
     private readonly RevArtDbContext _db;

@@ -8,4 +8,11 @@ public interface IBlobStorageService
         string contentType,
         int tenantId,
         int vehicleId);
+
+   Task<BlobUploadResult> UploadContentImageAsync(
+        Stream fileStream,
+        string fileName,
+        string contentType,
+        int tenantId,
+        string folder);
 }

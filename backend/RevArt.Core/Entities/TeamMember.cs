@@ -31,4 +31,6 @@ public class TeamMember
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public ICollection<TeamMemberPhoto> Photos { get; set; } = new List<TeamMemberPhoto>();
+
+    public ApplicationUser? User { get; set; }
 }

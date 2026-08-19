@@ -67,6 +67,26 @@ export function SettingsIcon(props) {
   );
 }
 
+export function LocationsIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M12 21s7-6.1 7-11.5A7 7 0 0 0 5 9.5C5 14.9 12 21 12 21Z" />
+      <circle cx="12" cy="9.5" r="2.5" />
+    </Svg>
+  );
+}
+
+export function TeamMembersIcon(props) {
+  return (
+    <Svg {...props}>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+      <circle cx="17.5" cy="8.5" r="2.3" />
+      <path d="M15.5 14.2c2.6.4 4.5 2.6 4.5 5.3" />
+    </Svg>
+  );
+}
+
 export function PlusIcon(props) {
   return (
     <Svg {...props} strokeWidth="2.2">
@@ -112,10 +132,58 @@ export function PencilIcon(props) {
   );
 }
 
+export function UsersIcon(props) {
+  return (
+    <Svg {...props}>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6" />
+      <circle cx="17.5" cy="8.5" r="2.3" />
+      <path d="M15.5 14.2c2.6.4 4.5 2.6 4.5 5.3" />
+    </Svg>
+  );
+}
+
+export function LogoutIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="M16 17l5-5-5-5" />
+      <path d="M21 12H9" />
+    </Svg>
+  );
+}
+
 export function CloseIcon(props) {
   return (
     <Svg {...props} strokeWidth="2">
       <path d="M6 6l12 12M18 6 6 18" />
+    </Svg>
+  );
+}
+
+export function CameraIcon(props) {
+  return (
+    <Svg {...props}>
+      <path d="M4 8h2.5L8 5.5h8L17.5 8H20a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 20 20H4a1.5 1.5 0 0 1-1.5-1.5v-9A1.5 1.5 0 0 1 4 8Z" />
+      <circle cx="12" cy="13.5" r="3.5" />
+    </Svg>
+  );
+}
+
+export function ImagesIcon(props) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="3" width="14" height="14" rx="2" />
+      <path d="M3 12.5 6.5 9l3.5 3.5L14 8l3 3" />
+      <path d="M21 8v10a2 2 0 0 1-2 2H8" />
+    </Svg>
+  );
+}
+
+export function StarIcon({ filled, ...props }) {
+  return (
+    <Svg {...props} fill={filled ? "currentColor" : "none"}>
+      <path d="m12 3 2.6 5.6 6.1.6-4.6 4.2 1.3 6-5.4-3.1-5.4 3.1 1.3-6-4.6-4.2 6.1-.6Z" />
     </Svg>
   );
 }

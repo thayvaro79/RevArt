@@ -1,15 +1,20 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import QuickAddSheet from "../components/admin/QuickAddSheet";
+import { useAuth } from "../context/AuthContext";
 import {
   DashboardIcon,
   VehiclesIcon,
   InquiriesIcon,
   ContentIcon,
+  LocationsIcon,
+  TeamMembersIcon,
+  UsersIcon,
   SettingsIcon,
   PlusIcon,
   MoreIcon,
   CloseIcon,
+  LogoutIcon,
 } from "../components/admin/icons";
 import "../styles/Admin.css";
 
@@ -18,16 +23,28 @@ const NAV_ITEMS = [
   { to: "/admin/vehicles", label: "Vehicles", icon: VehiclesIcon },
   { to: "/admin/inquiries", label: "Inquiries", icon: InquiriesIcon },
   { to: "/admin/content", label: "Content", icon: ContentIcon },
+  { to: "/admin/locations", label: "Locations", icon: LocationsIcon },
+  { to: "/admin/team-members", label: "Team Members", icon: TeamMembersIcon },
+  { to: "/admin/users", label: "Users", icon: UsersIcon, role: "Admin" },
   { to: "/admin/settings", label: "Settings", icon: SettingsIcon },
 ];
-
-const MOBILE_PRIMARY = [NAV_ITEMS[0], NAV_ITEMS[1]];
-const MOBILE_SECONDARY = [NAV_ITEMS[2]];
-const MOBILE_MORE = [NAV_ITEMS[3], NAV_ITEMS[4]];
 
 export default function AdminLayout() {
   const [quickAddOpen, setQuickAddOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const { user, hasRole, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const navItems = NAV_ITEMS.filter((item) => !item.role || hasRole(item.role));
+
+  const mobilePrimary = navItems.slice(0, 2);
+  const mobileSecondary = navItems.slice(2, 3);
+  const mobileMore = navItems.slice(3);
+
+  async function handleLogout() {
+    await logout();
+    navigate("/admin/login", { replace: true });
+  }
 
   return (
     <div className="admin-shell">
@@ -47,7 +64,7 @@ export default function AdminLayout() {
         </button>
 
         <nav className="admin-sidebar-nav">
-          {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+          {navItems.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
@@ -62,6 +79,18 @@ export default function AdminLayout() {
           ))}
         </nav>
 
+        <div className="admin-sidebar-account">
+          {user && <p className="admin-sidebar-account-email">{user.email}</p>}
+          <button
+            type="button"
+            className="admin-sidebar-logout-btn"
+            onClick={handleLogout}
+          >
+            <LogoutIcon />
+            Log out
+          </button>
+        </div>
+
         <Link to="/" className="admin-sidebar-exit">
           ‹ Back to site
         </Link>
@@ -72,9 +101,19 @@ export default function AdminLayout() {
           <Link to="/admin" className="admin-topbar-logo">
             REVART <span>ADMIN</span>
           </Link>
-          <Link to="/" className="admin-topbar-exit">
-            Exit
-          </Link>
+          <div className="admin-topbar-actions">
+            <button
+              type="button"
+              className="admin-topbar-logout-btn"
+              onClick={handleLogout}
+            >
+              <LogoutIcon />
+              Log out
+            </button>
+            <Link to="/" className="admin-topbar-exit">
+              Exit
+            </Link>
+          </div>
         </header>
 
         <main className="admin-content">
@@ -83,7 +122,7 @@ export default function AdminLayout() {
       </div>
 
       <nav className="admin-bottom-nav">
-        {MOBILE_PRIMARY.map(({ to, label, icon: Icon, end }) => (
+        {mobilePrimary.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
@@ -106,7 +145,7 @@ export default function AdminLayout() {
           <PlusIcon />
         </button>
 
-        {MOBILE_SECONDARY.map(({ to, label, icon: Icon }) => (
+        {mobileSecondary.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
@@ -148,7 +187,7 @@ export default function AdminLayout() {
                 <CloseIcon />
               </button>
             </div>
-            {MOBILE_MORE.map(({ to, label, icon: Icon }) => (
+            {mobileMore.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
                 to={to}
@@ -159,6 +198,17 @@ export default function AdminLayout() {
                 {label}
               </Link>
             ))}
+            <button
+              type="button"
+              className="admin-more-link"
+              onClick={() => {
+                setMoreOpen(false);
+                handleLogout();
+              }}
+            >
+              <LogoutIcon />
+              Log out
+            </button>
           </div>
         </div>
       )}

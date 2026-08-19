@@ -66,4 +66,38 @@ public class BlobStorageService : IBlobStorageService
             BlobName = blobName
         };
     }
+
+    public async Task<BlobUploadResult> UploadContentImageAsync(
+        Stream fileStream,
+        string fileName,
+        string contentType,
+        int tenantId,
+        string folder)
+    {
+        var safeFileName = Path.GetFileName(fileName);
+        var extension = Path.GetExtension(safeFileName);
+        var uniqueFileName = $"{Guid.NewGuid():N}{extension}";
+
+        var blobName = $"{tenantId}/content/{folder}/{uniqueFileName}";
+
+        var blobClient = _containerClient.GetBlobClient(blobName);
+
+        var uploadOptions = new BlobUploadOptions
+        {
+            HttpHeaders = new BlobHttpHeaders
+            {
+                ContentType = contentType
+            }
+        };
+
+        await blobClient.UploadAsync(
+            fileStream,
+            uploadOptions);
+
+        return new BlobUploadResult
+        {
+            Url = blobClient.Uri.ToString(),
+            BlobName = blobName
+        };
+    }
 }

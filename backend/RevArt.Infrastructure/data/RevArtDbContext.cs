@@ -1,9 +1,20 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RevArt.Core.Entities;
 
 namespace RevArt.Infrastructure.Data;
 
-public class RevArtDbContext : DbContext
+public class RevArtDbContext
+    : IdentityDbContext<
+        ApplicationUser,
+        ApplicationRole,
+        int,
+        IdentityUserClaim<int>,
+        IdentityUserRole<int>,
+        IdentityUserLogin<int>,
+        IdentityRoleClaim<int>,
+        IdentityUserToken<int>>
 {
     public RevArtDbContext(DbContextOptions<RevArtDbContext> options)
         : base(options)
@@ -40,5 +51,27 @@ public class RevArtDbContext : DbContext
 
     public DbSet<Inquiry> Inquiries => Set<Inquiry>();
 
-    
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+
+        builder.Entity<ApplicationUser>(entity =>
+        {
+            entity
+                .HasOne(u => u.Tenant)
+                .WithMany()
+                .HasForeignKey(u => u.TenantId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(u => u.TenantId);
+
+            entity
+                .HasOne(u => u.TeamMember)
+                .WithOne(t => t.User)
+                .HasForeignKey<ApplicationUser>(u => u.TeamMemberId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasIndex(u => u.TeamMemberId).IsUnique();
+        });
+    }
 }

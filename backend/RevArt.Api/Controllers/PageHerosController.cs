@@ -1,5 +1,7 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using RevArt.Api.Requests;
 using RevArt.Infrastructure.Data;
 
 namespace RevArt.Api.Controllers;
@@ -47,6 +49,48 @@ public class PageHeroesController : ControllerBase
         }
 
         return Ok(hero);
+    }
+
+    [HttpPut("{pageKey}")]
+    [Authorize(Roles = "Admin,Editor")]
+    public async Task<ActionResult<PageHeroResponse>> UpdatePageHero(
+        string pageKey,
+        [FromBody] UpdatePageHeroRequest request)
+    {
+        var hero = await _db.PageHeroes
+            .Where(h => h.TenantId == request.TenantId)
+            .Where(h => h.PageKey == pageKey)
+            .OrderBy(h => h.DisplayOrder)
+            .FirstOrDefaultAsync();
+
+        if (hero is null)
+        {
+            return NotFound();
+        }
+
+        hero.EyebrowText = request.EyebrowText;
+        hero.Title = request.Title;
+        hero.Subtitle = request.Subtitle;
+        hero.ButtonText = request.ButtonText;
+        hero.ButtonUrl = request.ButtonUrl;
+        hero.ImageUrl = request.ImageUrl;
+        hero.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync();
+
+        return Ok(new PageHeroResponse
+        {
+            Id = hero.Id,
+            PageKey = hero.PageKey,
+            PageName = hero.PageName,
+            HeroType = hero.HeroType,
+            EyebrowText = hero.EyebrowText,
+            Title = hero.Title,
+            Subtitle = hero.Subtitle,
+            ButtonText = hero.ButtonText,
+            ButtonUrl = hero.ButtonUrl,
+            ImageUrl = hero.ImageUrl
+        });
     }
 }
 

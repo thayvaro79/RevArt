@@ -1,4 +1,7 @@
+using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RevArt.Core.Entities;
 using RevArt.Core.Interfaces;
 using RevArt.Infrastructure.Data;
@@ -8,6 +11,7 @@ namespace RevArt.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Admin,Editor")]
 public class ImagesController : ControllerBase
 {
     private readonly IBlobStorageService _blobStorageService;
@@ -89,5 +93,66 @@ public class ImagesController : ControllerBase
             vehiclePhoto.SortOrder,
             vehiclePhoto.IsCover
         });
+    }
+
+    [HttpPut("{id:int}/cover")]
+    public async Task<IActionResult> SetCover(int id)
+    {
+        var photo = await _dbContext.VehiclePhotos.FindAsync(id);
+
+        if (photo is null)
+        {
+            return NotFound();
+        }
+
+        var otherCovers = await _dbContext.VehiclePhotos
+            .Where(p => p.VehicleId == photo.VehicleId && p.Id != id && p.IsCover)
+            .ToListAsync();
+
+        foreach (var other in otherCovers)
+        {
+            other.IsCover = false;
+        }
+
+        photo.IsCover = true;
+
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new { id = photo.Id, photo.VehicleId, isCover = true });
+    }
+
+    [HttpPost("upload-content")]
+    public async Task<IActionResult> UploadContentImage(
+        IFormFile file,
+        [FromForm] int tenantId = 1,
+        [FromForm] string folder = "content")
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("No file uploaded.");
+        }
+
+        var safeFolder = SanitizeFolder(folder);
+
+        await using var stream = file.OpenReadStream();
+
+        var uploadResult = await _blobStorageService.UploadContentImageAsync(
+            stream,
+            file.FileName,
+            file.ContentType,
+            tenantId,
+            safeFolder);
+
+        return Ok(new
+        {
+            url = uploadResult.Url,
+            blobName = uploadResult.BlobName
+        });
+    }
+
+    private static string SanitizeFolder(string? folder)
+    {
+        var cleaned = Regex.Replace(folder ?? string.Empty, "[^a-zA-Z0-9/_-]", "");
+        return string.IsNullOrWhiteSpace(cleaned) ? "content" : cleaned.ToLowerInvariant();
     }
 }

@@ -16,6 +16,13 @@ export async function getVehicleById(id) {
   return response.data;
 }
 
+export async function decodeVin(vin) {
+  const response = await axios.get(
+    `${API_BASE_URL}/Vehicles/decode-vin/${encodeURIComponent(vin)}`
+  );
+  return response.data;
+}
+
 export async function createVehicle(vehicle) {
   const response = await axios.post(`${API_BASE_URL}/Vehicles`, vehicle);
   return response.data;

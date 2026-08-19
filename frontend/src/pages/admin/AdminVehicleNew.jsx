@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import VehicleEntryChoices from "../../components/admin/VehicleEntryChoices";
-import { createVehicle } from "../../api/vehiclesApi";
+import VehiclePhotoUploadStep from "../../components/admin/VehiclePhotoUploadStep";
+import { createVehicle, decodeVin } from "../../api/vehiclesApi";
 import {
   getManufacturers,
   createManufacturer,
@@ -29,11 +30,41 @@ export default function AdminVehicleNew() {
     return "choice";
   });
   const [vin, setVin] = useState("");
+  const [decoding, setDecoding] = useState(false);
+  const [decodeError, setDecodeError] = useState(null);
+  const [decodedVehicle, setDecodedVehicle] = useState(null);
+  const [createdVehicleId, setCreatedVehicleId] = useState(null);
 
   function handleChoice(mode) {
     if (mode === "manual") setStep("form");
     else if (mode === "enter") setStep("enter");
     else setStep("scan");
+  }
+
+  async function handleVinSubmit(vinValue) {
+    const normalizedVin = vinValue.trim().toUpperCase();
+    setVin(normalizedVin);
+    setDecoding(true);
+    setDecodeError(null);
+    setDecodedVehicle(null);
+
+    try {
+      const result = await decodeVin(normalizedVin);
+
+      if (result.success) {
+        setDecodedVehicle(result);
+      } else {
+        setDecodeError(
+          result.errorMessage || "Couldn't decode this VIN. Enter the details manually."
+        );
+      }
+    } catch (err) {
+      console.error("VIN decode failed:", err);
+      setDecodeError("Couldn't reach the VIN decoder. Enter the details manually.");
+    } finally {
+      setDecoding(false);
+      setStep("form");
+    }
   }
 
   return (
@@ -47,38 +78,46 @@ export default function AdminVehicleNew() {
 
       {step === "scan" && (
         <ScanVinStep
+          decoding={decoding}
           onCancel={() => setStep("choice")}
           onFallback={() => setStep("enter")}
-          onConfirm={(value) => {
-            setVin(value);
-            setStep("form");
-          }}
+          onSubmitVin={handleVinSubmit}
         />
       )}
 
       {step === "enter" && (
         <EnterVinStep
+          decoding={decoding}
           onCancel={() => setStep("choice")}
           onSkip={() => setStep("form")}
-          onConfirm={(value) => {
-            setVin(value);
-            setStep("form");
-          }}
+          onSubmitVin={handleVinSubmit}
         />
       )}
 
       {step === "form" && (
         <ManualForm
           initialVin={vin}
+          decodedVehicle={decodedVehicle}
+          decodeError={decodeError}
           onCancel={() => setStep("choice")}
-          onCreated={() => navigate("/admin/vehicles")}
+          onCreated={(vehicle) => {
+            setCreatedVehicleId(vehicle.id);
+            setStep("photos");
+          }}
+        />
+      )}
+
+      {step === "photos" && createdVehicleId && (
+        <VehiclePhotoUploadStep
+          vehicleId={createdVehicleId}
+          onDone={() => navigate("/admin/vehicles")}
         />
       )}
     </div>
   );
 }
 
-function ScanVinStep({ onCancel, onFallback, onConfirm }) {
+function ScanVinStep({ decoding, onCancel, onFallback, onSubmitVin }) {
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const [cameraError, setCameraError] = useState(null);
@@ -145,30 +184,31 @@ function ScanVinStep({ onCancel, onFallback, onConfirm }) {
           onChange={(event) => setVinValue(event.target.value.toUpperCase())}
           placeholder="e.g. 1FAFP404X1F123456"
           maxLength={17}
+          disabled={decoding}
         />
       </label>
 
       <div className="admin-form-actions">
-        <button type="button" className="admin-secondary-btn" onClick={onCancel}>
+        <button type="button" className="admin-secondary-btn" onClick={onCancel} disabled={decoding}>
           Back
         </button>
-        <button type="button" className="admin-secondary-btn" onClick={onFallback}>
+        <button type="button" className="admin-secondary-btn" onClick={onFallback} disabled={decoding}>
           Type VIN instead
         </button>
         <button
           type="button"
           className="admin-primary-btn"
-          disabled={!vinValue.trim()}
-          onClick={() => onConfirm(vinValue.trim())}
+          disabled={!vinValue.trim() || decoding}
+          onClick={() => onSubmitVin(vinValue.trim())}
         >
-          Continue
+          {decoding ? "Decoding…" : "Continue"}
         </button>
       </div>
     </div>
   );
 }
 
-function EnterVinStep({ onCancel, onSkip, onConfirm }) {
+function EnterVinStep({ decoding, onCancel, onSkip, onSubmitVin }) {
   const [vinValue, setVinValue] = useState("");
 
   return (
@@ -181,23 +221,28 @@ function EnterVinStep({ onCancel, onSkip, onConfirm }) {
           onChange={(event) => setVinValue(event.target.value.toUpperCase())}
           placeholder="e.g. 1FAFP404X1F123456"
           maxLength={17}
+          disabled={decoding}
         />
       </label>
 
+      <p className="admin-field-hint">
+        We'll decode this VIN and pre-fill as much of the listing as we can.
+      </p>
+
       <div className="admin-form-actions">
-        <button type="button" className="admin-secondary-btn" onClick={onCancel}>
+        <button type="button" className="admin-secondary-btn" onClick={onCancel} disabled={decoding}>
           Back
         </button>
-        <button type="button" className="admin-secondary-btn" onClick={onSkip}>
+        <button type="button" className="admin-secondary-btn" onClick={onSkip} disabled={decoding}>
           Skip
         </button>
         <button
           type="button"
           className="admin-primary-btn"
-          disabled={!vinValue.trim()}
-          onClick={() => onConfirm(vinValue.trim())}
+          disabled={!vinValue.trim() || decoding}
+          onClick={() => onSubmitVin(vinValue.trim())}
         >
-          Continue
+          {decoding ? "Decoding…" : "Continue"}
         </button>
       </div>
     </div>
@@ -220,17 +265,35 @@ const EMPTY_FORM = {
   description: "",
 };
 
-function ManualForm({ initialVin, onCancel, onCreated }) {
-  const [form, setForm] = useState(EMPTY_FORM);
+function ManualForm({ initialVin, decodedVehicle, decodeError, onCancel, onCreated }) {
+  const [form, setForm] = useState(() => ({
+    ...EMPTY_FORM,
+    year: decodedVehicle?.year ?? EMPTY_FORM.year,
+    model: decodedVehicle?.model ?? EMPTY_FORM.model,
+    trim: decodedVehicle?.trim ?? EMPTY_FORM.trim,
+    transmission: decodedVehicle?.transmission ?? EMPTY_FORM.transmission,
+  }));
   const [slugTouched, setSlugTouched] = useState(false);
   const [vin, setVin] = useState(initialVin || "");
 
   const [manufacturers, setManufacturers] = useState([]);
   const [vehicleTypes, setVehicleTypes] = useState([]);
-  const [manufacturerId, setManufacturerId] = useState("");
-  const [vehicleTypeId, setVehicleTypeId] = useState("");
-  const [newManufacturer, setNewManufacturer] = useState("");
-  const [newVehicleType, setNewVehicleType] = useState("");
+  const [manufacturerId, setManufacturerId] = useState(
+    decodedVehicle?.manufacturerId ? String(decodedVehicle.manufacturerId) : ""
+  );
+  const [vehicleTypeId, setVehicleTypeId] = useState(
+    decodedVehicle?.vehicleTypeId ? String(decodedVehicle.vehicleTypeId) : ""
+  );
+  const [newManufacturer, setNewManufacturer] = useState(
+    decodedVehicle && !decodedVehicle.manufacturerId
+      ? decodedVehicle.manufacturerName || ""
+      : ""
+  );
+  const [newVehicleType, setNewVehicleType] = useState(
+    decodedVehicle && !decodedVehicle.vehicleTypeId
+      ? decodedVehicle.vehicleTypeName || ""
+      : ""
+  );
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -302,7 +365,7 @@ function ManualForm({ initialVin, onCancel, onCreated }) {
     setError(null);
 
     try {
-      await createVehicle({
+      const created = await createVehicle({
         tenantId: 1,
         manufacturerId: Number(manufacturerId),
         vehicleTypeId: Number(vehicleTypeId),
@@ -322,7 +385,7 @@ function ManualForm({ initialVin, onCancel, onCreated }) {
         description: form.description || null,
       });
 
-      onCreated();
+      onCreated(created);
     } catch (err) {
       console.error("Failed to create vehicle:", err);
       setError("Couldn't save this vehicle. Check the fields and try again.");
@@ -333,11 +396,29 @@ function ManualForm({ initialVin, onCancel, onCreated }) {
 
   return (
     <form className="admin-form-card admin-vehicle-form" onSubmit={handleSubmit}>
-      {vin && (
+      {decodedVehicle && (
+        <p className="admin-field-hint">
+          Decoded VIN <strong>{vin}</strong> — review the pre-filled fields below before saving.
+        </p>
+      )}
+
+      {decodeError && (
+        <p className="admin-error-banner">
+          {decodeError} VIN <strong>{vin}</strong> was carried over; fill in the rest manually.
+        </p>
+      )}
+
+      {!decodedVehicle && !decodeError && vin && (
         <p className="admin-field-hint">
           VIN carried over from the previous step: <strong>{vin}</strong>
         </p>
       )}
+
+      {decodedVehicle?.warnings?.map((warning) => (
+        <p key={warning} className="admin-field-hint">
+          {warning}
+        </p>
+      ))}
 
       <div className="admin-form-grid">
         <label className="admin-field admin-field--wide">

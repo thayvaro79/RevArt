@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RevArt.Api.Requests;
@@ -18,6 +19,7 @@ public class InquiriesController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin,Editor")]
     public async Task<ActionResult<IEnumerable<InquiryResponse>>> GetInquiries(
         [FromQuery] int tenantId = 1)
     {
@@ -76,6 +78,7 @@ public class InquiriesController : ControllerBase
     }
 
     [HttpPut("{id:int}/status")]
+    [Authorize(Roles = "Admin,Editor")]
     public async Task<IActionResult> UpdateStatus(int id, UpdateInquiryStatusRequest request)
     {
         var inquiry = await _db.Inquiries.FindAsync(id);
