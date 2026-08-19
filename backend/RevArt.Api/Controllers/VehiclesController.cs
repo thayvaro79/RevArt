@@ -86,6 +86,7 @@ public class VehiclesController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
+    [Authorize(Roles = "Admin,Editor")]
     public async Task<ActionResult<Vehicle>> GetVehicle(int id)
     {
         var vehicle = await _db.Vehicles
@@ -271,13 +272,8 @@ public class VehiclesController : ControllerBase
 
     [HttpPut("{id:int}")]
     [Authorize(Roles = "Admin,Editor")]
-    public async Task<IActionResult> UpdateVehicle(int id, Vehicle vehicle)
+    public async Task<IActionResult> UpdateVehicle(int id, UpdateVehicleRequest request)
     {
-        if (id != vehicle.Id)
-        {
-            return BadRequest("Route id does not match vehicle id.");
-        }
-
         var existingVehicle = await _db.Vehicles.FindAsync(id);
 
         if (existingVehicle is null)
@@ -285,23 +281,39 @@ public class VehiclesController : ControllerBase
             return NotFound();
         }
 
-        existingVehicle.TenantId = vehicle.TenantId;
-        existingVehicle.VehicleTypeId = vehicle.VehicleTypeId;
-        existingVehicle.Title = vehicle.Title;
-        existingVehicle.Slug = vehicle.Slug;
-        existingVehicle.Year = vehicle.Year;
-        existingVehicle.ManufacturerId = vehicle.ManufacturerId;
-        existingVehicle.Model = vehicle.Model;
-        existingVehicle.Trim = vehicle.Trim;
-        existingVehicle.VIN = vehicle.VIN;
-        existingVehicle.Mileage = vehicle.Mileage;
-        existingVehicle.Transmission = vehicle.Transmission;
-        existingVehicle.ExteriorColor = vehicle.ExteriorColor;
-        existingVehicle.InteriorColor = vehicle.InteriorColor;
-        existingVehicle.Price = vehicle.Price;
-        existingVehicle.Status = vehicle.Status;
-        existingVehicle.IsFeatured = vehicle.IsFeatured;
-        existingVehicle.Description = vehicle.Description;
+        var manufacturerExists = await _db.Manufacturers.AnyAsync(m => m.Id == request.ManufacturerId);
+
+        if (!manufacturerExists)
+        {
+            return BadRequest("Manufacturer not found.");
+        }
+
+        var vehicleTypeExists = await _db.VehicleTypes.AnyAsync(t => t.Id == request.VehicleTypeId);
+
+        if (!vehicleTypeExists)
+        {
+            return BadRequest("Vehicle type not found.");
+        }
+
+        // TenantId and VIN identify the vehicle and its tenant boundary — they are
+        // intentionally not part of this request and can never be changed here.
+        // A wrong VIN should be corrected by deleting and recreating the Draft,
+        // not by silently changing identity.
+        existingVehicle.VehicleTypeId = request.VehicleTypeId;
+        existingVehicle.Title = request.Title;
+        existingVehicle.Slug = request.Slug;
+        existingVehicle.Year = request.Year;
+        existingVehicle.ManufacturerId = request.ManufacturerId;
+        existingVehicle.Model = request.Model;
+        existingVehicle.Trim = request.Trim;
+        existingVehicle.Mileage = request.Mileage;
+        existingVehicle.Transmission = request.Transmission;
+        existingVehicle.ExteriorColor = request.ExteriorColor;
+        existingVehicle.InteriorColor = request.InteriorColor;
+        existingVehicle.Price = request.Price;
+        existingVehicle.Status = request.Status;
+        existingVehicle.IsFeatured = request.IsFeatured;
+        existingVehicle.Description = request.Description;
         existingVehicle.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
@@ -364,6 +376,27 @@ public class CreateVehicleRequest
     public string Model { get; set; } = string.Empty;
     public string? Trim { get; set; }
     public string? Vin { get; set; }
+    public int? Mileage { get; set; }
+    public string? Transmission { get; set; }
+    public string? ExteriorColor { get; set; }
+    public string? InteriorColor { get; set; }
+    public decimal? Price { get; set; }
+    public RevArt.Core.Enums.VehicleStatus Status { get; set; }
+    public bool IsFeatured { get; set; }
+    public string? Description { get; set; }
+}
+
+public class UpdateVehicleRequest
+{
+    public int VehicleTypeId { get; set; }
+    public int ManufacturerId { get; set; }
+
+    public string Title { get; set; } = string.Empty;
+    public string Slug { get; set; } = string.Empty;
+
+    public int Year { get; set; }
+    public string Model { get; set; } = string.Empty;
+    public string? Trim { get; set; }
     public int? Mileage { get; set; }
     public string? Transmission { get; set; }
     public string? ExteriorColor { get; set; }

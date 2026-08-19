@@ -100,4 +100,15 @@ public class BlobStorageService : IBlobStorageService
             BlobName = blobName
         };
     }
+
+    public async Task DeleteAsync(string blobName)
+    {
+        if (string.IsNullOrWhiteSpace(blobName))
+        {
+            return;
+        }
+
+        var blobClient = _containerClient.GetBlobClient(blobName);
+        await blobClient.DeleteIfExistsAsync();
+    }
 }

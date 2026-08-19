@@ -121,6 +121,74 @@ public class ImagesController : ControllerBase
         return Ok(new { id = photo.Id, photo.VehicleId, isCover = true });
     }
 
+    [HttpPut("{id:int}/category")]
+    public async Task<IActionResult> SetCategory(int id, SetPhotoCategoryRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Category))
+        {
+            return BadRequest("Category is required.");
+        }
+
+        var photo = await _dbContext.VehiclePhotos.FindAsync(id);
+
+        if (photo is null)
+        {
+            return NotFound();
+        }
+
+        photo.Category = request.Category;
+        photo.Role = request.Category;
+        photo.AltText = request.Category;
+
+        await _dbContext.SaveChangesAsync();
+
+        return Ok(new { id = photo.Id, photo.Category });
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeletePhoto(int id)
+    {
+        var photo = await _dbContext.VehiclePhotos.FindAsync(id);
+
+        if (photo is null)
+        {
+            return NotFound();
+        }
+
+        var vehicleId = photo.VehicleId;
+        var wasCover = photo.IsCover;
+
+        if (!string.IsNullOrWhiteSpace(photo.BlobName))
+        {
+            // Delete the original plus the known generated variants the image
+            // processor writes alongside it (same filename, sibling folder) —
+            // best-effort: DeleteIfExistsAsync no-ops for variants that were
+            // never generated (e.g. the processor hasn't run locally).
+            await _blobStorageService.DeleteAsync(photo.BlobName);
+            await _blobStorageService.DeleteAsync(photo.BlobName.Replace("/original/", "/thumbnail/"));
+            await _blobStorageService.DeleteAsync(photo.BlobName.Replace("/original/", "/medium/"));
+        }
+
+        _dbContext.VehiclePhotos.Remove(photo);
+        await _dbContext.SaveChangesAsync();
+
+        if (wasCover)
+        {
+            var nextCover = await _dbContext.VehiclePhotos
+                .Where(p => p.VehicleId == vehicleId && p.IsActive)
+                .OrderBy(p => p.SortOrder)
+                .FirstOrDefaultAsync();
+
+            if (nextCover is not null)
+            {
+                nextCover.IsCover = true;
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        return NoContent();
+    }
+
     [HttpPost("upload-content")]
     public async Task<IActionResult> UploadContentImage(
         IFormFile file,
@@ -155,4 +223,9 @@ public class ImagesController : ControllerBase
         var cleaned = Regex.Replace(folder ?? string.Empty, "[^a-zA-Z0-9/_-]", "");
         return string.IsNullOrWhiteSpace(cleaned) ? "content" : cleaned.ToLowerInvariant();
     }
+}
+
+public class SetPhotoCategoryRequest
+{
+    public string Category { get; set; } = string.Empty;
 }

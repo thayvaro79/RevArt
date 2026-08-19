@@ -15,4 +15,6 @@ public interface IBlobStorageService
         string contentType,
         int tenantId,
         string folder);
+
+   Task DeleteAsync(string blobName);
 }

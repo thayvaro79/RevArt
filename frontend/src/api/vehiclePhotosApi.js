@@ -31,3 +31,14 @@ export async function setVehiclePhotoCover(photoId) {
   const response = await axios.put(`${API_BASE_URL}/Images/${photoId}/cover`);
   return response.data;
 }
+
+export async function setVehiclePhotoCategory(photoId, category) {
+  const response = await axios.put(`${API_BASE_URL}/Images/${photoId}/category`, {
+    category,
+  });
+  return response.data;
+}
+
+export async function deleteVehiclePhoto(photoId) {
+  await axios.delete(`${API_BASE_URL}/Images/${photoId}`);
+}

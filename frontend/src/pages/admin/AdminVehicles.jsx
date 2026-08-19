@@ -213,6 +213,12 @@ export default function AdminVehicles() {
                   </td>
                   <td>
                     <div className="admin-table-actions">
+                      <Link
+                        to={`/admin/vehicles/${vehicle.id}/edit`}
+                        className="admin-table-link"
+                      >
+                        Edit
+                      </Link>
                       {vehicle.slug && (
                         <a
                           href={`/garage/${vehicle.slug}`}

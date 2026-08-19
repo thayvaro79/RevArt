@@ -16,6 +16,7 @@ import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminVehicles from "./pages/admin/AdminVehicles";
 import AdminVehicleNew from "./pages/admin/AdminVehicleNew";
+import AdminVehicleEdit from "./pages/admin/AdminVehicleEdit";
 import AdminInquiries from "./pages/admin/AdminInquiries";
 import AdminContent from "./pages/admin/AdminContent";
 import AdminContentEditor from "./pages/admin/AdminContentEditor";
@@ -54,6 +55,7 @@ function App() {
               <Route index element={<AdminDashboard />} />
               <Route path="vehicles" element={<AdminVehicles />} />
               <Route path="vehicles/new" element={<AdminVehicleNew />} />
+              <Route path="vehicles/:id/edit" element={<AdminVehicleEdit />} />
               <Route path="inquiries" element={<AdminInquiries />} />
               <Route path="content" element={<AdminContent />} />
               <Route path="content/:slug" element={<AdminContentEditor />} />

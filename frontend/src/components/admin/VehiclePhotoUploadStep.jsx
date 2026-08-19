@@ -3,9 +3,11 @@ import {
   uploadVehiclePhoto,
   getVehiclePhotos,
   setVehiclePhotoCover,
+  setVehiclePhotoCategory,
+  deleteVehiclePhoto,
 } from "../../api/vehiclePhotosApi";
 import { VEHICLE_PHOTO_CATEGORIES } from "../../constants/vehiclePhotoCategories";
-import { CameraIcon, ImagesIcon, StarIcon, CloseIcon } from "./icons";
+import { CameraIcon, ImagesIcon, StarIcon, CloseIcon, TrashIcon } from "./icons";
 
 function makeLocalId() {
   return `local-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -15,18 +17,33 @@ export default function VehiclePhotoUploadStep({ vehicleId, onDone }) {
   const [existingPhotos, setExistingPhotos] = useState([]);
   const [pending, setPending] = useState([]);
   const [selectedLocalIds, setSelectedLocalIds] = useState(new Set());
+  const [selectedExistingIds, setSelectedExistingIds] = useState(new Set());
   const [loadingExisting, setLoadingExisting] = useState(true);
   const [loadError, setLoadError] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
 
   const libraryInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const nextSortOrderRef = useRef(0);
 
+  async function refetchExisting() {
+    try {
+      const data = await getVehiclePhotos(vehicleId);
+      setExistingPhotos(data || []);
+      nextSortOrderRef.current = (data || []).length;
+      setLoadError(null);
+    } catch (err) {
+      console.error("Failed to load existing photos:", err);
+      setLoadError("Couldn't load existing photos.");
+    }
+  }
+
   useEffect(() => {
     let cancelled = false;
 
     async function loadExisting() {
+      setLoadingExisting(true);
       try {
         const data = await getVehiclePhotos(vehicleId);
         if (cancelled) return;
@@ -95,15 +112,68 @@ export default function VehiclePhotoUploadStep({ vehicleId, onDone }) {
     });
   }
 
-  function assignCategoryToSelected(category) {
-    if (selectedLocalIds.size === 0) return;
+  function toggleSelectedExisting(photoId) {
+    setSelectedExistingIds((current) => {
+      const next = new Set(current);
+      if (next.has(photoId)) next.delete(photoId);
+      else next.add(photoId);
+      return next;
+    });
+  }
 
-    setPending((current) =>
-      current.map((item) =>
-        selectedLocalIds.has(item.localId) ? { ...item, category } : item
-      )
-    );
-    setSelectedLocalIds(new Set());
+  async function assignCategoryToSelected(category) {
+    if (selectedLocalIds.size === 0 && selectedExistingIds.size === 0) return;
+
+    if (selectedLocalIds.size > 0) {
+      setPending((current) =>
+        current.map((item) =>
+          selectedLocalIds.has(item.localId) ? { ...item, category } : item
+        )
+      );
+      setSelectedLocalIds(new Set());
+    }
+
+    if (selectedExistingIds.size > 0) {
+      const targetIds = Array.from(selectedExistingIds);
+      setSelectedExistingIds(new Set());
+
+      // Optimistic: reflect the new category immediately, reconcile on failure.
+      setExistingPhotos((current) =>
+        current.map((p) => (targetIds.includes(p.id) ? { ...p, category } : p))
+      );
+
+      try {
+        await Promise.all(
+          targetIds.map((photoId) => setVehiclePhotoCategory(photoId, category))
+        );
+      } catch (err) {
+        console.error("Failed to update photo category:", err);
+        refetchExisting();
+      }
+    }
+  }
+
+  async function deleteExistingPhoto(photoId) {
+    if (!window.confirm("Delete this photo? This cannot be undone.")) return;
+
+    setDeletingId(photoId);
+
+    try {
+      await deleteVehiclePhoto(photoId);
+      // Re-fetch rather than guess locally — the backend may have promoted a
+      // new cover photo, and this keeps that state authoritative.
+      await refetchExisting();
+      setSelectedExistingIds((current) => {
+        const next = new Set(current);
+        next.delete(photoId);
+        return next;
+      });
+    } catch (err) {
+      console.error("Failed to delete photo:", err);
+      setLoadError("Couldn't delete that photo. Try again.");
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   function removePending(localId) {
@@ -279,10 +349,10 @@ export default function VehiclePhotoUploadStep({ vehicleId, onDone }) {
         </p>
       )}
 
-      {selectedLocalIds.size > 0 && (
+      {(selectedLocalIds.size > 0 || selectedExistingIds.size > 0) && (
         <div className="admin-photo-category-bar">
           <span className="admin-photo-category-bar-label">
-            Set category for {selectedLocalIds.size} selected:
+            Set category for {selectedLocalIds.size + selectedExistingIds.size} selected:
           </span>
           {VEHICLE_PHOTO_CATEGORIES.map((category) => (
             <button
@@ -306,7 +376,12 @@ export default function VehiclePhotoUploadStep({ vehicleId, onDone }) {
           {existingPhotos.map((photo) => (
             <div
               key={`existing-${photo.id}`}
-              className="admin-photo-thumb admin-photo-thumb-uploaded"
+              className={`admin-photo-thumb admin-photo-thumb-uploaded${
+                selectedExistingIds.has(photo.id) ? " admin-photo-thumb-selected" : ""
+              }`}
+              onClick={() =>
+                deletingId !== photo.id && toggleSelectedExisting(photo.id)
+              }
             >
               <img src={photo.imageUrl} alt={photo.category} />
               <button
@@ -314,12 +389,30 @@ export default function VehiclePhotoUploadStep({ vehicleId, onDone }) {
                 className={`admin-photo-cover-btn${
                   photo.isCover ? " admin-photo-cover-btn-active" : ""
                 }`}
-                onClick={() => setExistingCover(photo.id)}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setExistingCover(photo.id);
+                }}
                 aria-label={photo.isCover ? "Cover photo" : "Set as cover photo"}
               >
                 <StarIcon filled={photo.isCover} />
               </button>
+              <button
+                type="button"
+                className="admin-photo-remove-btn"
+                disabled={deletingId === photo.id}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  deleteExistingPhoto(photo.id);
+                }}
+                aria-label="Delete photo"
+              >
+                <TrashIcon />
+              </button>
               <span className="admin-photo-thumb-category">{photo.category}</span>
+              {deletingId === photo.id && (
+                <div className="admin-photo-thumb-status-overlay">Deleting…</div>
+              )}
             </div>
           ))}
 

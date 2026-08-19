@@ -1228,7 +1228,7 @@
 }
 
 .admin-photo-thumb-uploaded {
-  cursor: default;
+  cursor: pointer;
 }
 
 .admin-photo-thumb-selected {
@@ -1391,4 +1391,58 @@
 
 .admin-access-denied h1 {
   margin: 0 0 8px;
+}
+
+/* ============ VEHICLE EDIT (SEGMENTED STEPS) ============ */
+
+.admin-vehicle-edit-tabs {
+  display: flex;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 5px;
+  margin-bottom: 20px;
+}
+
+.admin-vehicle-edit-tab {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 8px;
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.admin-vehicle-edit-tab-active {
+  background: #d6b36a;
+  color: #0a0a0a;
+}
+
+.admin-vehicle-edit-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 18px;
+}
+
+.admin-vehicle-edit-identity-vin {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 0.4px;
+}
+
+.admin-vehicle-edit-save-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.admin-vehicle-edit-saved-msg {
+  font-size: 13px;
+  color: #86e6a4;
 }
