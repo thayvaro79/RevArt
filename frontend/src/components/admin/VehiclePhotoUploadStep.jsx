@@ -219,30 +219,36 @@ export default function VehiclePhotoUploadStep({ vehicleId, onDone }) {
       )
     );
 
-    try {
-      const sortOrder = nextSortOrderRef.current++;
+    // Preserved across a retry so a failure that happens *after* the file is
+    // already uploaded (e.g. the follow-up set-cover call) doesn't re-upload
+    // the same file and create a duplicate photo.
+    let result = item.uploadResult ?? null;
+    const sortOrder = item.sortOrder ?? nextSortOrderRef.current++;
 
-      const result = await uploadVehiclePhoto(
-        item.file,
-        {
-          tenantId: 1,
-          vehicleId,
-          category: item.category,
-          sortOrder,
-          isCover: false,
-        },
-        (progressEvent) => {
-          if (!progressEvent.total) return;
-          const progress = Math.round(
-            (progressEvent.loaded / progressEvent.total) * 100
-          );
-          setPending((current) =>
-            current.map((p) =>
-              p.localId === item.localId ? { ...p, progress } : p
-            )
-          );
-        }
-      );
+    try {
+      if (!result) {
+        result = await uploadVehiclePhoto(
+          item.file,
+          {
+            tenantId: 1,
+            vehicleId,
+            category: item.category,
+            sortOrder,
+            isCover: false,
+          },
+          (progressEvent) => {
+            if (!progressEvent.total) return;
+            const progress = Math.round(
+              (progressEvent.loaded / progressEvent.total) * 100
+            );
+            setPending((current) =>
+              current.map((p) =>
+                p.localId === item.localId ? { ...p, progress } : p
+              )
+            );
+          }
+        );
+      }
 
       if (item.isCover) {
         await setVehiclePhotoCover(result.id);
@@ -273,7 +279,15 @@ export default function VehiclePhotoUploadStep({ vehicleId, onDone }) {
       setPending((current) =>
         current.map((p) =>
           p.localId === item.localId
-            ? { ...p, status: "error", errorMessage: "Upload failed — tap to retry" }
+            ? {
+                ...p,
+                status: "error",
+                sortOrder,
+                uploadResult: result,
+                errorMessage: result
+                  ? "Uploaded, but couldn't set as cover — tap to retry"
+                  : "Upload failed — tap to retry",
+              }
             : p
         )
       );
@@ -293,6 +307,18 @@ export default function VehiclePhotoUploadStep({ vehicleId, onDone }) {
     }
 
     setUploading(false);
+  }
+
+  function handleDone() {
+    if (pending.length > 0) {
+      const proceed = window.confirm(
+        `${pending.length} photo${pending.length === 1 ? " hasn't" : "s haven't"} ` +
+          "finished uploading. Leave anyway? Photos still shown here have NOT been saved."
+      );
+      if (!proceed) return;
+    }
+
+    onDone();
   }
 
   const hasCover =
@@ -498,7 +524,7 @@ export default function VehiclePhotoUploadStep({ vehicleId, onDone }) {
           type="button"
           className="admin-secondary-btn"
           disabled={uploading}
-          onClick={onDone}
+          onClick={handleDone}
         >
           Done
         </button>

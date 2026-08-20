@@ -48,22 +48,29 @@ public class AzureVinOcrService : IVinOcrService
         var mediaType = string.IsNullOrWhiteSpace(contentType) ? "image/jpeg" : contentType;
         var imageBytes = BinaryData.FromBytes(memoryStream.ToArray(), mediaType);
 
+        // Deliberately does NOT ask the model to judge length/format (e.g. "is
+        // this 17 characters") — vision models are unreliable at precisely
+        // counting characters as part of a compound reasoning step, and will
+        // reject a VIN they transcribed correctly because they miscounted it.
+        // The model's only job is to transcribe what it sees; the 17-character,
+        // no-I/O/Q validation below is the sole authority on format.
         const string promptText =
             """
             You are examining a photo that may or may not show a vehicle
-            identification number (VIN) plate, sticker, or door-jamb label. A real
-            VIN is exactly 17 characters using only digits 0-9 and uppercase
-            letters A-Z, and never contains the letters I, O, or Q.
+            identification number (VIN) plate, sticker, or door-jamb label.
 
-            Look carefully. Only report a VIN if you can actually see printed or
-            embossed alphanumeric characters in the image that form one. The image
-            may be blank, blurry, unrelated, or simply not show a VIN — in any of
-            those cases, or if you have any real doubt, you must say so rather than
-            guessing or reconstructing a plausible-looking VIN.
+            Look carefully at the image. If you can see printed or embossed
+            alphanumeric characters that look like a VIN (a long code mixing
+            letters and digits), report exactly the characters you see, as
+            literally as possible — do not count them, do not pad or trim them,
+            and do not decide whether the length or format is correct; another
+            system will validate that separately. If the image is blank, blurry,
+            unrelated, or you do not see any such code at all, say so instead of
+            guessing.
 
             Respond with ONLY a JSON object (no markdown, no other text) in exactly
             this shape:
-            {"vinVisible": true or false, "vin": "the characters you actually read, or null"}
+            {"textVisible": true or false, "text": "the exact characters you read, or null"}
             """;
 
         var options = new CreateResponseOptions
@@ -77,7 +84,21 @@ public class AzureVinOcrService : IVinOcrService
             ResponseContentPart.CreateInputImagePart(imageBytes)
         }));
 
-        ResponseResult response = await _responsesClient.CreateResponseAsync(options, cancellationToken);
+        const string cantReadMessage =
+            "Couldn't read a VIN from that photo. Try again with better lighting/focus, or type it manually.";
+
+        ResponseResult response;
+        try
+        {
+            response = await _responsesClient.CreateResponseAsync(options, cancellationToken);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            // The vision service rejected the request outright (e.g. an
+            // unreadable/corrupt image, or a transient service error) — this is
+            // a normal, expected outcome for a bad photo, not a server bug.
+            return new VinOcrResult { Success = false, ErrorMessage = cantReadMessage };
+        }
 
         var raw = (response.GetOutputText() ?? string.Empty).Trim();
         var json = StripCodeFence(raw);
@@ -94,19 +115,15 @@ public class AzureVinOcrService : IVinOcrService
             parsed = null;
         }
 
-        const string cantReadMessage =
-            "Couldn't read a VIN from that photo. Try again with better lighting/focus, or type it manually.";
-
-        if (parsed is null || !parsed.VinVisible || string.IsNullOrWhiteSpace(parsed.Vin))
+        if (parsed is null || !parsed.TextVisible || string.IsNullOrWhiteSpace(parsed.Text))
         {
             return new VinOcrResult { Success = false, ErrorMessage = cantReadMessage };
         }
 
-        // Strip anything OCR-style output might add (spaces, dashes, punctuation)
-        // before checking it actually forms a well-shaped VIN, even though the
-        // model reported it saw one — this is a real physical-world detail we can
-        // verify independently of the model's own judgment.
-        var cleaned = Regex.Replace(parsed.Vin.ToUpperInvariant(), "[^A-Z0-9]", "");
+        // Strip anything OCR-style output might add (spaces, dashes, punctuation),
+        // then find a contiguous 17-character VIN-shaped candidate within it. This
+        // regex — not the model — is the sole authority on length/format.
+        var cleaned = Regex.Replace(parsed.Text.ToUpperInvariant(), "[^A-Z0-9]", "");
         var match = VinPattern.Match(cleaned);
 
         if (!match.Success)
@@ -145,11 +162,11 @@ public class AzureVinOcrService : IVinOcrService
 
     private class VinVisionResponse
     {
-        [JsonPropertyName("vinVisible")]
-        public bool VinVisible { get; set; }
+        [JsonPropertyName("textVisible")]
+        public bool TextVisible { get; set; }
 
-        [JsonPropertyName("vin")]
-        public string? Vin { get; set; }
+        [JsonPropertyName("text")]
+        public string? Text { get; set; }
     }
 }
 
