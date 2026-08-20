@@ -817,6 +817,33 @@ h3 {
 }
 }
 
+/* Phone-width hero composition fix.
+   The hero photo is landscape (~1.75:1). At the ~100svh height used above
+   (and previously, ~760px min-height on desktop), a phone's tall/narrow
+   viewport forces `cover` to blow the image up until only a ~33%-wide
+   vertical sliver is visible — no `background-position` value can show
+   more than that sliver, it can only choose which sliver. Tuning position
+   alone (60% then 40%) could never fix this; the container's aspect ratio
+   itself has to get closer to the image's.
+   A near-square hero at true phone widths roughly doubles the visible
+   width (to ~57%), which is enough to keep the whole lead car (and most
+   of the second car) in frame, while still reading as a large, full-bleed
+   hero — not a thin banner. Tablet widths (601-900px) keep the taller
+   treatment above; they already have enough width for `cover` to avoid
+   this problem (validated separately). Desktop is untouched — this block
+   only applies below 600px. */
+@media (max-width: 600px) {
+  .garage-hero {
+    height: auto;
+    aspect-ratio: 1 / 1;
+    min-height: 340px;
+  }
+
+  .garage-hero.home-hero {
+    background-position: 35% center;
+  }
+}
+
 .vehicle-scroll-cue {
   position: absolute;
   right: 5vw;
