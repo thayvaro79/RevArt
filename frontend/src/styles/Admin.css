@@ -916,6 +916,23 @@
   margin: 0;
 }
 
+.admin-field--editorial textarea {
+  min-height: 220px;
+  resize: vertical;
+}
+
+.admin-editorial-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.admin-editorial-error {
+  font-size: 12px;
+  color: #e08585;
+}
+
 .admin-lookup-row {
   display: flex;
 }

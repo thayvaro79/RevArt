@@ -5,6 +5,7 @@ import { getManufacturers, createManufacturer } from "../../api/manufacturersApi
 import { getVehicleTypes, createVehicleType } from "../../api/vehicleTypesApi";
 import { VEHICLE_STATUS_OPTIONS } from "../../constants/vehicleStatus";
 import VehiclePhotoUploadStep from "../../components/admin/VehiclePhotoUploadStep";
+import EditorialTextField from "../../components/admin/EditorialTextField";
 
 const TABS = [
   { key: "details", label: "Details" },
@@ -30,6 +31,8 @@ const EMPTY_FORM = {
   price: "",
   isFeatured: false,
   description: "",
+  historyText: "",
+  theCarText: "",
 };
 
 export default function AdminVehicleEdit() {
@@ -85,6 +88,8 @@ export default function AdminVehicleEdit() {
           price: vehicleData.price ?? "",
           isFeatured: Boolean(vehicleData.isFeatured),
           description: vehicleData.description || "",
+          historyText: vehicleData.historyText || "",
+          theCarText: vehicleData.theCarText || "",
         });
         setManufacturerId(String(vehicleData.manufacturerId || ""));
         setVehicleTypeId(String(vehicleData.vehicleTypeId || ""));
@@ -164,6 +169,8 @@ export default function AdminVehicleEdit() {
         status: statusValue,
         isFeatured: form.isFeatured,
         description: form.description || null,
+        historyText: form.historyText || null,
+        theCarText: form.theCarText || null,
       });
 
       setVehicle((current) => ({
@@ -403,6 +410,46 @@ export default function AdminVehicleEdit() {
                 onChange={(event) => updateField("description", event.target.value)}
               />
             </label>
+
+            <EditorialTextField
+              label="THE CAR"
+              intent="TheCar"
+              value={form.theCarText}
+              onChange={(value) => updateField("theCarText", value)}
+              placeholder="Configuration, ownership, condition, specification, provenance, notable equipment, driving character…"
+              vehicleContext={{
+                manufacturerName:
+                  manufacturers.find((m) => String(m.id) === manufacturerId)?.name || null,
+                model: form.model || null,
+                trim: form.trim || null,
+                year: form.year ? Number(form.year) : null,
+                mileage: form.mileage ? Number(form.mileage) : null,
+                transmission: form.transmission || null,
+                exteriorColor: form.exteriorColor || null,
+                interiorColor: form.interiorColor || null,
+                vin: readVin(vehicle) || null,
+              }}
+            />
+
+            <EditorialTextField
+              label="HISTORY"
+              intent="History"
+              value={form.historyText}
+              onChange={(value) => updateField("historyText", value)}
+              placeholder="Model introduction, historical significance, production context, engineering background, notable variants, collector relevance…"
+              vehicleContext={{
+                manufacturerName:
+                  manufacturers.find((m) => String(m.id) === manufacturerId)?.name || null,
+                model: form.model || null,
+                trim: form.trim || null,
+                year: form.year ? Number(form.year) : null,
+                mileage: form.mileage ? Number(form.mileage) : null,
+                transmission: form.transmission || null,
+                exteriorColor: form.exteriorColor || null,
+                interiorColor: form.interiorColor || null,
+                vin: readVin(vehicle) || null,
+              }}
+            />
           </div>
 
           {saveError && <p className="admin-error-banner">{saveError}</p>}

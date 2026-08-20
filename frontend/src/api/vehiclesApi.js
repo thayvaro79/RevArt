@@ -56,3 +56,11 @@ export async function updateVehicleStatus(id, status) {
   });
   return response.data;
 }
+
+export async function generateVehicleEditorial(payload) {
+  const response = await axios.post(
+    `${API_BASE_URL}/Vehicles/generate-editorial`,
+    payload
+  );
+  return response.data;
+}

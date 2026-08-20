@@ -19,17 +19,20 @@ public class VehiclesController : ControllerBase
     private readonly IVehicleService _vehicleService;
     private readonly IVinDecoderService _vinDecoderService;
     private readonly IVinOcrService _vinOcrService;
+    private readonly IVehicleEditorialDraftService _editorialDraftService;
 
     public VehiclesController(
         RevArtDbContext db,
         IVehicleService vehicleService,
         IVinDecoderService vinDecoderService,
-        IVinOcrService vinOcrService)
+        IVinOcrService vinOcrService,
+        IVehicleEditorialDraftService editorialDraftService)
     {
         _db = db;
         _vehicleService = vehicleService;
         _vinDecoderService = vinDecoderService;
         _vinOcrService = vinOcrService;
+        _editorialDraftService = editorialDraftService;
     }
 
     [HttpGet]
@@ -217,6 +220,22 @@ public class VehiclesController : ControllerBase
         });
     }
 
+    [HttpPost("generate-editorial")]
+    [Authorize(Roles = "Admin,Editor")]
+    public async Task<ActionResult<VehicleEditorialDraftResponseDto>> GenerateEditorial(
+        [FromBody] VehicleEditorialDraftRequestDto request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.Model))
+        {
+            return BadRequest("Model is required to generate editorial copy.");
+        }
+
+        var draft = await _editorialDraftService.GenerateDraftAsync(request, cancellationToken);
+
+        return Ok(new VehicleEditorialDraftResponseDto { Draft = draft });
+    }
+
     private static VehicleType? MatchVehicleType(string bodyClass, List<VehicleType> existingTypes)
     {
         var normalized = bodyClass.Trim().ToLowerInvariant();
@@ -288,6 +307,8 @@ public class VehiclesController : ControllerBase
             Status = request.Status,
             IsFeatured = request.IsFeatured,
             Description = request.Description,
+            HistoryText = request.HistoryText,
+            TheCarText = request.TheCarText,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -341,6 +362,8 @@ public class VehiclesController : ControllerBase
         existingVehicle.Status = request.Status;
         existingVehicle.IsFeatured = request.IsFeatured;
         existingVehicle.Description = request.Description;
+        existingVehicle.HistoryText = request.HistoryText;
+        existingVehicle.TheCarText = request.TheCarText;
         existingVehicle.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
@@ -411,6 +434,8 @@ public class CreateVehicleRequest
     public RevArt.Core.Enums.VehicleStatus Status { get; set; }
     public bool IsFeatured { get; set; }
     public string? Description { get; set; }
+    public string? HistoryText { get; set; }
+    public string? TheCarText { get; set; }
 }
 
 public class UpdateVehicleRequest
@@ -432,6 +457,8 @@ public class UpdateVehicleRequest
     public RevArt.Core.Enums.VehicleStatus Status { get; set; }
     public bool IsFeatured { get; set; }
     public string? Description { get; set; }
+    public string? HistoryText { get; set; }
+    public string? TheCarText { get; set; }
 }
 
 public class VehicleResponse
