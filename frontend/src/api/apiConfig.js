@@ -1,6 +1,8 @@
 import axios from "axios";
 
-const PRODUCTION_API_BASE_URL = "https://revart-api-79.azurewebsites.net/api";
+// Same-origin path: the Static Web App proxies /api/* to the linked
+// revart-api-79 App Service backend, so the auth cookie stays first-party.
+const PRODUCTION_API_BASE_URL = "/api";
 const LOCAL_API_BASE_URL = "http://localhost:5146/api";
 
 export const API_BASE_URL =
