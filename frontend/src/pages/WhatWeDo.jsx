@@ -6,6 +6,7 @@ import PageHero from "../components/layout/PageHero";
 import InquirySection from "../components/layout/InquirySection";
 import Footer from "../components/layout/Footer";
 import LocationCard from "../components/whoweare/LocationCard";
+import ServicesAccordion from "../components/whatwedo/ServicesAccordion";
 import "../styles/WhoWeAre.css";
 import "../styles/WhatWeDo.css";
 
@@ -63,6 +64,10 @@ export default function WhatWeDo() {
   const approachSection = findSection(sections, "approach");
   const commitmentSection = findSection(sections, "commitment");
 
+  const serviceItems = sections
+    .filter((section) => section.sectionKey?.startsWith("service-"))
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
   return (
     <>
       <Header />
@@ -73,14 +78,21 @@ export default function WhatWeDo() {
       />
 
       <main className="whoweare-page">
-        {!loadingSections && approachSection && (
-          <section className="brand-story-section">
-            <h2>{approachSection.heading}</h2>
-            <p>{approachSection.body}</p>
+        {!loadingSections && (approachSection || serviceItems.length > 0) && (
+          <section className="wwd-split-section">
+            {approachSection && (
+              <div className="wwd-split-copy">
+                <h2>{approachSection.heading}</h2>
+                <p>{approachSection.body}</p>
+              </div>
+            )}
+
+            <ServicesAccordion items={serviceItems} />
           </section>
         )}
 
-        <section className="whoweare-section">
+        <section className="stat-section">
+          <div className="stat-section-eyebrow">By The Numbers</div>
           <div className="stat-row">
             {STATS.map((stat) => (
               <div className="stat-item" key={stat.label}>
@@ -110,7 +122,7 @@ export default function WhatWeDo() {
               Location information coming soon.
             </p>
           ) : (
-            <div className="person-card-grid">
+            <div className="person-card-grid wwd-locations-grid">
               {locations.map((location) => (
                 <LocationCard key={location.id} location={location} />
               ))}

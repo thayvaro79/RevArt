@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { getPageSections } from "../api/pageSectionsApi";
-import { getLocations } from "../api/locationsApi";
+import { getLocations, getLocationBySlug } from "../api/locationsApi";
 import Header from "../components/layout/Header";
 import PageHero from "../components/layout/PageHero";
 import InquirySection from "../components/layout/InquirySection";
 import Footer from "../components/layout/Footer";
-import LocationCard from "../components/whoweare/LocationCard";
+import LocationContactRow from "../components/contact/LocationContactRow";
 import "../styles/WhoWeAre.css";
+import "../styles/Contact.css";
 
 function findSection(sections, key) {
   return sections.find((section) => section.sectionKey === key);
@@ -35,10 +36,16 @@ export default function Contact() {
   }, []);
 
   useEffect(() => {
+    // Fetching full per-location detail (incl. photos) for each of the
+    // (currently only 2) locations. Revisit with a batched list endpoint
+    // if the number of locations grows materially.
     async function loadLocations() {
       try {
-        const data = await getLocations();
-        setLocations(data || []);
+        const summaries = await getLocations();
+        const details = await Promise.all(
+          (summaries || []).map((summary) => getLocationBySlug(summary.slug))
+        );
+        setLocations(details);
       } catch (error) {
         console.error("Failed to load locations:", error);
       } finally {
@@ -80,9 +87,9 @@ export default function Contact() {
               Location information coming soon.
             </p>
           ) : (
-            <div className="person-card-grid">
+            <div className="contact-locations">
               {locations.map((location) => (
-                <LocationCard key={location.id} location={location} />
+                <LocationContactRow key={location.id} location={location} />
               ))}
             </div>
           )}

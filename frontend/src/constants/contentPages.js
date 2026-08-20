@@ -89,6 +89,51 @@ export const CONTENT_PAGES = {
     sections: [
       { key: "approach", label: "Our Approach", fields: ["heading", "body"] },
       { key: "commitment", label: "Our Commitment", fields: ["heading", "body"] },
+      {
+        key: "service-sell-your-vehicle",
+        label: "Service: Sell Your Vehicle",
+        fields: ["heading", "body"],
+      },
+      {
+        key: "service-consignment",
+        label: "Service: Consignment",
+        fields: ["heading", "body"],
+      },
+      {
+        key: "service-private-sales",
+        label: "Service: Private & Discreet Sales",
+        fields: ["heading", "body"],
+      },
+      {
+        key: "service-vehicle-sourcing",
+        label: "Service: Vehicle Sourcing",
+        fields: ["heading", "body"],
+      },
+      {
+        key: "service-pre-purchase-inspections",
+        label: "Service: Pre-Purchase Inspections",
+        fields: ["heading", "body"],
+      },
+      {
+        key: "service-collection-management",
+        label: "Service: Collection Management",
+        fields: ["heading", "body"],
+      },
+      {
+        key: "service-market-guidance",
+        label: "Service: Market Guidance",
+        fields: ["heading", "body"],
+      },
+      {
+        key: "service-acquisition-support",
+        label: "Service: Acquisition Support",
+        fields: ["heading", "body"],
+      },
+      {
+        key: "service-transportation-logistics",
+        label: "Service: Transportation & Logistics",
+        fields: ["heading", "body"],
+      },
     ],
     cards: [],
   },
