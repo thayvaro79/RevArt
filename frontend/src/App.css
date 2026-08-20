@@ -679,7 +679,12 @@ h3 {
   }
 
   .garage-hero.home-hero {
-    background-position: 60% center;
+    /* Home hero's lead car sits left-of-center in the source photo; on a
+       narrow/tall mobile crop, cover's default centered position (50%)
+       already cuts off its nose, and the previous 60% pushed the window
+       further right, cropping most of the car. 40% keeps it fully framed
+       at phone widths while still reading well at tablet widths. */
+    background-position: 40% center;
   }
 
   .section-heading {
