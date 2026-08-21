@@ -118,6 +118,7 @@ export default function Garage() {
         pageKey="garage"
         title="THE GARAGE"
         fallbackImage="/images/garage_hero.jpg"
+        className="garage-page-hero"
       />
 
       <main className="garage-page" id="inventory">

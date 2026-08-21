@@ -37,14 +37,23 @@ export default function GarageControls({
   return (
     <div className="garage-controls">
       <div className="garage-controls-counts">
-        <span className="garage-count">
-          <strong>{availableCount}</strong> Available Now
+        <span className="garage-sort-label">Sort By</span>
+        <span className="garage-sort-divider" aria-hidden="true" />
+
+        <span className="garage-pill garage-pill--active">
+          <span className="garage-pill-label">Available Now</span>
+          <span className="garage-pill-sep" aria-hidden="true">|</span>
+          <span className="garage-pill-count">{availableCount}</span>
         </span>
-        <span className="garage-count">
-          <strong>{comingSoonCount}</strong> Coming Soon
+        <span className="garage-pill">
+          <span className="garage-pill-label">Coming Soon</span>
+          <span className="garage-pill-sep" aria-hidden="true">|</span>
+          <span className="garage-pill-count">{comingSoonCount}</span>
         </span>
-        <span className="garage-count">
-          <strong>{motorcycleCount}</strong> Motorcycles
+        <span className="garage-pill">
+          <span className="garage-pill-label">Motorcycles</span>
+          <span className="garage-pill-sep" aria-hidden="true">|</span>
+          <span className="garage-pill-count">{motorcycleCount}</span>
         </span>
       </div>
 

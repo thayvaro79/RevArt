@@ -155,6 +155,23 @@ h3 {
   display: none !important;
 }
 
+/* Garage-only cinematic fade into the black inventory section below —
+   scoped past the blanket ::before/::after reset above via the extra
+   .garage-page-hero class + !important, so Home and every other
+   PageHero-based page (Sold, Who We Are, What We Do, Contact) are
+   completely unaffected. Sits above the hero image but below the title
+   and scroll arrow, and never intercepts clicks on the arrow. */
+.garage-hero.garage-page-hero::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 140px;
+  z-index: 2;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(5, 5, 5, 0), rgba(5, 5, 5, 0.92));
+}
+
 .garage-hero-content {
   position: absolute;
   top: 18%;
@@ -305,11 +322,10 @@ h3 {
   position: absolute;
   inset: 0;
   z-index: 2;
-  padding: 34px;
+  padding: 26px;
 
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
 
   background: linear-gradient(
     180deg,
@@ -319,12 +335,30 @@ h3 {
   );
 }
 
+.vehicle-available-label {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 12px;
+  font-weight: 700;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.65);
+}
+
+.vehicle-card-bottom {
+  margin-top: auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .vehicle-card-copy {
-  max-width: 72%;
+  max-width: 78%;
 }
 
 .vehicle-label {
-  margin: 0 0 10px;
+  margin: 0 0 8px;
   color: #d6b36a;
   text-transform: uppercase;
   letter-spacing: 3px;
@@ -334,25 +368,28 @@ h3 {
 .vehicle-card h2 {
   margin: 0;
   color: #fff !important;
-  font-size: clamp(28px, 3vw, 46px);
-  line-height: 1;
+  font-size: clamp(20px, 1.7vw, 27px);
+  line-height: 1.1;
 }
 
 .vehicle-card p {
-  margin: 8px 0 0;
-  color: #fff;
+  margin: 5px 0 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
 .vehicle-plus {
   align-self: flex-end;
-  width: 58px;
-  height: 58px;
+  width: 48px;
+  height: 48px;
   border: 1px solid white;
   border-radius: 50%;
   color: white;
   text-decoration: none;
-  font-size: 34px;
-  line-height: 52px;
+  font-size: 28px;
+  line-height: 44px;
   text-align: center;
   flex-shrink: 0;
 }
@@ -519,22 +556,17 @@ h3 {
 .footer {
   background: #050505;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
-  padding: 80px 60px 30px;
 }
 
 .footer-main {
-  min-height: 360px;
-  padding: 90px 7vw;
+  padding: 56px 7vw 48px;
 
   display: grid;
-  grid-template-columns: 1.4fr 1fr 1fr;
-  gap: 80px;
+  grid-template-columns: 1.1fr 1.3fr 0.8fr;
+  gap: 48px;
 
-  border-bottom: 1px solid rgba(255,255,255,.65);
-
-  background:
-    radial-gradient(circle at 20% 20%, rgba(255,255,255,.04), transparent 32%),
-    #050505;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  background: #050505;
 }
 
 .footer-top {
@@ -545,25 +577,44 @@ h3 {
 
 .footer-brand h2 {
   margin: 0;
-  font-size: 46px;
-  letter-spacing: 10px;
+  color: #fff;
+  font-size: 32px;
+  letter-spacing: 6px;
 }
 
-.footer-brand p {
-  margin: 6px 0 0;
-  letter-spacing: 14px;
+.footer-brand-sub {
+  margin: 4px 0 0;
+  color: rgba(255, 255, 255, 0.5);
+  letter-spacing: 8px;
+  font-size: 11px;
+}
+
+.footer-tagline {
+  margin: 18px 0 0;
+  max-width: 30ch;
+  color: rgba(255, 255, 255, 0.5);
   font-size: 13px;
+  line-height: 1.5;
+}
+
+.footer-locations {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
 }
 
 .footer-location h3 {
   margin: 0 0 10px;
-  font-size: 24px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .footer-location p {
-  margin: 0 0 10px;
-  font-size: 20px;
-  line-height: 1.35;
+  margin: 0 0 6px;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .footer-links {
@@ -572,17 +623,18 @@ h3 {
 }
 
 .footer-links h4 {
-  margin-bottom: 20px;
+  margin: 0 0 14px;
   letter-spacing: 2px;
   text-transform: uppercase;
-  font-size: 13px;
+  font-size: 11px;
   color: #d6b36a;
 }
 
 .footer-links a {
-  color: white;
+  color: rgba(255, 255, 255, 0.65);
   text-decoration: none;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
+  font-size: 13px;
   transition: 0.25s;
 }
 
@@ -591,18 +643,25 @@ h3 {
 }
 
 .footer-bottom {
-  padding: 34px 7vw;
+  padding: 18px 7vw;
 
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
 
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .footer-bottom p {
   margin: 0;
+}
+
+.footer-social {
+  color: rgba(255, 255, 255, 0.4);
 }
 /* RESPONSIVE */
 
@@ -722,16 +781,20 @@ h3 {
 
   .footer-main {
     grid-template-columns: 1fr;
-    gap: 40px;
-    padding: 60px 24px;
-    min-height: auto;
+    gap: 32px;
+    padding: 40px 24px 36px;
+  }
+
+  .footer-locations {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
   }
 
   .footer-bottom {
-    grid-template-columns: 1fr;
-    gap: 16px;
-    padding: 28px 24px;
-    font-size: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 18px 24px;
     text-align: left;
   }
 
@@ -752,12 +815,13 @@ h3 {
   }
 
   .footer-brand h2 {
-    font-size: 34px;
-    letter-spacing: 6px;
+    font-size: 28px;
+    letter-spacing: 4px;
   }
 
-  .footer-bottom {
-    font-size: 14px;
+  .footer-locations {
+    grid-template-columns: 1fr;
+    gap: 20px;
   }
 }
 

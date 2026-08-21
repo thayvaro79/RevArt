@@ -9,6 +9,7 @@ const VehicleCard = forwardRef(function VehicleCard({ vehicle }, ref) {
     .replace(/\s+/g, "");
 
   const isComingSoon = normalizedStatus === "comingsoon";
+  const isAvailable = normalizedStatus === "available";
 
   return (
       <article
@@ -19,22 +20,26 @@ const VehicleCard = forwardRef(function VehicleCard({ vehicle }, ref) {
   style={vehicle.imageUrl ? { backgroundImage: `url(${vehicle.imageUrl})` } : undefined}
 >
       <div className="vehicle-card-overlay">
-        <div className="vehicle-card-copy">
-          {vehicle.isFeatured && <p className="vehicle-label">Featured</p>}
-          <h2>{vehicle.title}</h2>
-          <p>{vehicle.manufacturerName}</p>
-        </div>
+        {isAvailable && <p className="vehicle-available-label">Available Now</p>}
 
-        {isComingSoon ? (
-          <div className="vehicle-coming-soon">
-            <span className="vehicle-lock">🔒</span>
-            <span>COMING SOON</span>
+        <div className="vehicle-card-bottom">
+          <div className="vehicle-card-copy">
+            {vehicle.isFeatured && <p className="vehicle-label">Featured</p>}
+            <h2>{vehicle.title}</h2>
+            <p>{vehicle.manufacturerName}</p>
           </div>
-        ) : (
-          <Link className="vehicle-plus" to={`/garage/${vehicle.slug}`}>
-            +
-          </Link>
-        )}
+
+          {isComingSoon ? (
+            <div className="vehicle-coming-soon">
+              <span className="vehicle-lock">🔒</span>
+              <span>COMING SOON</span>
+            </div>
+          ) : (
+            <Link className="vehicle-plus" to={`/garage/${vehicle.slug}`}>
+              +
+            </Link>
+          )}
+        </div>
       </div>
     </article>
   );
